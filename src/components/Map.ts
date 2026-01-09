@@ -229,15 +229,138 @@ export class MapComponent {
   }
 
   private setupZoomHandlers(): void {
+    let isDragging = false;
+    let lastPos = { x: 0, y: 0 };
+    let lastTouchDist = 0;
+    let lastTouchCenter = { x: 0, y: 0 };
+
+    // Wheel zoom with smooth delta
     this.container.addEventListener(
       'wheel',
       (e) => {
         e.preventDefault();
-        if (e.deltaY < 0) this.zoomIn();
-        else this.zoomOut();
+
+        // Check if this is a pinch gesture (ctrlKey is set for trackpad pinch)
+        if (e.ctrlKey) {
+          // Pinch-to-zoom on trackpad
+          const zoomDelta = -e.deltaY * 0.01;
+          this.state.zoom = Math.max(1, Math.min(4, this.state.zoom + zoomDelta));
+        } else {
+          // Two-finger scroll for pan, regular scroll for zoom
+          if (Math.abs(e.deltaX) > Math.abs(e.deltaY) * 0.5 || e.shiftKey) {
+            // Horizontal scroll or shift+scroll = pan
+            const panSpeed = 2 / this.state.zoom;
+            this.state.pan.x -= e.deltaX * panSpeed;
+            this.state.pan.y -= e.deltaY * panSpeed;
+          } else {
+            // Vertical scroll = zoom
+            const zoomDelta = e.deltaY > 0 ? -0.15 : 0.15;
+            this.state.zoom = Math.max(1, Math.min(4, this.state.zoom + zoomDelta));
+          }
+        }
+        this.applyTransform();
       },
       { passive: false }
     );
+
+    // Mouse drag for panning
+    this.container.addEventListener('mousedown', (e) => {
+      if (e.button === 0) { // Left click
+        isDragging = true;
+        lastPos = { x: e.clientX, y: e.clientY };
+        this.container.style.cursor = 'grabbing';
+      }
+    });
+
+    document.addEventListener('mousemove', (e) => {
+      if (!isDragging) return;
+
+      const dx = e.clientX - lastPos.x;
+      const dy = e.clientY - lastPos.y;
+
+      const panSpeed = 1 / this.state.zoom;
+      this.state.pan.x += dx * panSpeed;
+      this.state.pan.y += dy * panSpeed;
+
+      lastPos = { x: e.clientX, y: e.clientY };
+      this.applyTransform();
+    });
+
+    document.addEventListener('mouseup', () => {
+      if (isDragging) {
+        isDragging = false;
+        this.container.style.cursor = 'grab';
+      }
+    });
+
+    // Touch events for mobile and trackpad
+    this.container.addEventListener('touchstart', (e) => {
+      const touch1 = e.touches[0];
+      const touch2 = e.touches[1];
+
+      if (e.touches.length === 2 && touch1 && touch2) {
+        e.preventDefault();
+        lastTouchDist = Math.hypot(
+          touch2.clientX - touch1.clientX,
+          touch2.clientY - touch1.clientY
+        );
+        lastTouchCenter = {
+          x: (touch1.clientX + touch2.clientX) / 2,
+          y: (touch1.clientY + touch2.clientY) / 2,
+        };
+      } else if (e.touches.length === 1 && touch1) {
+        isDragging = true;
+        lastPos = { x: touch1.clientX, y: touch1.clientY };
+      }
+    }, { passive: false });
+
+    this.container.addEventListener('touchmove', (e) => {
+      const touch1 = e.touches[0];
+      const touch2 = e.touches[1];
+
+      if (e.touches.length === 2 && touch1 && touch2) {
+        e.preventDefault();
+
+        // Pinch zoom
+        const dist = Math.hypot(
+          touch2.clientX - touch1.clientX,
+          touch2.clientY - touch1.clientY
+        );
+        const scale = dist / lastTouchDist;
+        this.state.zoom = Math.max(1, Math.min(4, this.state.zoom * scale));
+        lastTouchDist = dist;
+
+        // Two-finger pan
+        const center = {
+          x: (touch1.clientX + touch2.clientX) / 2,
+          y: (touch1.clientY + touch2.clientY) / 2,
+        };
+        const panSpeed = 1 / this.state.zoom;
+        this.state.pan.x += (center.x - lastTouchCenter.x) * panSpeed;
+        this.state.pan.y += (center.y - lastTouchCenter.y) * panSpeed;
+        lastTouchCenter = center;
+
+        this.applyTransform();
+      } else if (e.touches.length === 1 && isDragging && touch1) {
+        const dx = touch1.clientX - lastPos.x;
+        const dy = touch1.clientY - lastPos.y;
+
+        const panSpeed = 1 / this.state.zoom;
+        this.state.pan.x += dx * panSpeed;
+        this.state.pan.y += dy * panSpeed;
+
+        lastPos = { x: touch1.clientX, y: touch1.clientY };
+        this.applyTransform();
+      }
+    }, { passive: false });
+
+    this.container.addEventListener('touchend', () => {
+      isDragging = false;
+      lastTouchDist = 0;
+    });
+
+    // Set initial cursor
+    this.container.style.cursor = 'grab';
   }
 
   private async loadMapData(): Promise<void> {
@@ -802,7 +925,79 @@ export class MapComponent {
   }
 
   private applyTransform(): void {
-    this.wrapper.style.transform = `scale(${this.state.zoom}) translate(${this.state.pan.x}px, ${this.state.pan.y}px)`;
+    const zoom = this.state.zoom;
+    this.wrapper.style.transform = `scale(${zoom}) translate(${this.state.pan.x}px, ${this.state.pan.y}px)`;
+
+    // Set CSS variable for counter-scaling labels/markers
+    // Labels: max 1.5x scale, so counter-scale = min(1.5, zoom) / zoom
+    // Markers: fixed size, so counter-scale = 1 / zoom
+    const labelScale = Math.min(1.5, zoom) / zoom;
+    const markerScale = 1 / zoom;
+    this.wrapper.style.setProperty('--label-scale', String(labelScale));
+    this.wrapper.style.setProperty('--marker-scale', String(markerScale));
+    this.wrapper.style.setProperty('--zoom', String(zoom));
+
+    // Smart label hiding based on zoom level and overlap
+    this.updateLabelVisibility(zoom);
+  }
+
+  private updateLabelVisibility(zoom: number): void {
+    const labels = this.overlays.querySelectorAll('.hotspot-label, .earthquake-label, .nuclear-label, .weather-label, .apt-label');
+    const labelRects: { el: Element; rect: DOMRect; priority: number }[] = [];
+
+    // Collect all label bounds with priority
+    labels.forEach((label) => {
+      const el = label as HTMLElement;
+      const parent = el.closest('.hotspot, .earthquake-marker, .nuclear-marker, .weather-marker, .apt-marker');
+
+      // Assign priority based on parent type and level
+      let priority = 1;
+      if (parent?.classList.contains('hotspot')) {
+        const marker = parent.querySelector('.hotspot-marker');
+        if (marker?.classList.contains('high')) priority = 5;
+        else if (marker?.classList.contains('elevated')) priority = 3;
+        else priority = 2;
+      } else if (parent?.classList.contains('earthquake-marker')) {
+        priority = 4; // Earthquakes are important
+      } else if (parent?.classList.contains('weather-marker')) {
+        if (parent.classList.contains('extreme')) priority = 5;
+        else if (parent.classList.contains('severe')) priority = 4;
+        else priority = 2;
+      } else if (parent?.classList.contains('nuclear-marker')) {
+        if (parent.classList.contains('contested')) priority = 5;
+        else priority = 3;
+      }
+
+      // Reset visibility first
+      el.style.opacity = '1';
+
+      // Get bounding rect (accounting for transforms)
+      const rect = el.getBoundingClientRect();
+      labelRects.push({ el, rect, priority });
+    });
+
+    // Sort by priority (highest first)
+    labelRects.sort((a, b) => b.priority - a.priority);
+
+    // Hide overlapping labels (keep higher priority visible)
+    const visibleRects: DOMRect[] = [];
+    const minDistance = 30 / zoom; // Minimum pixel distance between labels
+
+    labelRects.forEach(({ el, rect, priority }) => {
+      const overlaps = visibleRects.some((vr) => {
+        const dx = Math.abs((rect.left + rect.width / 2) - (vr.left + vr.width / 2));
+        const dy = Math.abs((rect.top + rect.height / 2) - (vr.top + vr.height / 2));
+        return dx < (rect.width + vr.width) / 2 + minDistance &&
+               dy < (rect.height + vr.height) / 2 + minDistance;
+      });
+
+      if (overlaps && zoom < 2) {
+        // Hide overlapping labels when zoomed out, but keep high priority visible
+        (el as HTMLElement).style.opacity = priority >= 4 ? '0.7' : '0';
+      } else {
+        visibleRects.push(rect);
+      }
+    });
   }
 
   public onHotspotClicked(callback: (hotspot: Hotspot) => void): void {
