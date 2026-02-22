@@ -15,6 +15,8 @@ import type {
   AcledConflictEvent,
 } from '../../../../src/generated/server/worldmonitor/conflict/v1/service_server';
 
+import { CHROME_UA } from '../../../_shared/constants';
+
 const ACLED_API_URL = 'https://acleddata.com/api/acled/read';
 
 async function fetchAcledConflicts(req: ListAcledEventsRequest): Promise<AcledConflictEvent[]> {
@@ -44,6 +46,7 @@ async function fetchAcledConflicts(req: ListAcledEventsRequest): Promise<AcledCo
       headers: {
         Accept: 'application/json',
         Authorization: `Bearer ${token}`,
+        'User-Agent': CHROME_UA,
       },
       signal: AbortSignal.timeout(15000),
     });

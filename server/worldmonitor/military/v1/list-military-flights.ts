@@ -8,6 +8,7 @@ import type {
 } from '../../../../src/generated/server/worldmonitor/military/v1/service_server';
 
 import { isMilitaryCallsign, isMilitaryHex, detectAircraftType, UPSTREAM_TIMEOUT_MS } from './_shared';
+import { CHROME_UA } from '../../../_shared/constants';
 
 const AIRCRAFT_TYPE_MAP: Record<string, string> = {
   tanker: 'MILITARY_AIRCRAFT_TYPE_TANKER',
@@ -41,7 +42,7 @@ export async function listMilitaryFlights(
 
     const url = `${baseUrl}${params.toString() ? '?' + params.toString() : ''}`;
     const resp = await fetch(url, {
-      headers: { Accept: 'application/json', 'User-Agent': 'Mozilla/5.0 WorldMonitor/1.0' },
+      headers: { Accept: 'application/json', 'User-Agent': CHROME_UA },
       signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS),
     });
 

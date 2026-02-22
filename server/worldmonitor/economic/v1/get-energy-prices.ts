@@ -12,6 +12,8 @@ import type {
   EnergyPrice,
 } from '../../../../src/generated/server/worldmonitor/economic/v1/service_server';
 
+import { CHROME_UA } from '../../../_shared/constants';
+
 interface EiaSeriesConfig {
   commodity: string;
   name: string;
@@ -53,7 +55,7 @@ async function fetchEiaSeries(
     });
 
     const response = await fetch(`https://api.eia.gov${config.apiPath}?${params}`, {
-      headers: { Accept: 'application/json' },
+      headers: { Accept: 'application/json', 'User-Agent': CHROME_UA },
       signal: AbortSignal.timeout(10000),
     });
 

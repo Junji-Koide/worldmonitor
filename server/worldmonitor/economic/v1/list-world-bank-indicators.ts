@@ -10,6 +10,8 @@ import type {
   WorldBankCountryData,
 } from '../../../../src/generated/server/worldmonitor/economic/v1/service_server';
 
+import { CHROME_UA } from '../../../_shared/constants';
+
 const TECH_COUNTRIES = [
   'USA', 'CHN', 'JPN', 'DEU', 'KOR', 'GBR', 'IND', 'ISR', 'SGP', 'TWN',
   'FRA', 'CAN', 'SWE', 'NLD', 'CHE', 'FIN', 'IRL', 'AUS', 'BRA', 'IDN',
@@ -37,7 +39,7 @@ async function fetchWorldBankIndicators(
     const response = await fetch(wbUrl, {
       headers: {
         Accept: 'application/json',
-        'User-Agent': 'Mozilla/5.0 (compatible; WorldMonitor/1.0; +https://worldmonitor.app)',
+        'User-Agent': CHROME_UA,
       },
       signal: AbortSignal.timeout(15000),
     });

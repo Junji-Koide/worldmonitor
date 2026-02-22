@@ -13,6 +13,8 @@ import type {
   HumanitarianCountrySummary,
 } from '../../../../src/generated/server/worldmonitor/conflict/v1/service_server';
 
+import { CHROME_UA } from '../../../_shared/constants';
+
 const ISO2_TO_ISO3: Record<string, string> = {
   US: 'USA', RU: 'RUS', CN: 'CHN', UA: 'UKR', IR: 'IRN',
   IL: 'ISR', TW: 'TWN', KP: 'PRK', SA: 'SAU', TR: 'TUR',
@@ -49,7 +51,7 @@ async function fetchHapiSummary(countryCode: string): Promise<HumanitarianCountr
     }
 
     const response = await fetch(url, {
-      headers: { Accept: 'application/json' },
+      headers: { Accept: 'application/json', 'User-Agent': CHROME_UA },
       signal: AbortSignal.timeout(15000),
     });
 

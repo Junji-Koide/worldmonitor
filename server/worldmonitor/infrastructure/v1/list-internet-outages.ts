@@ -9,6 +9,7 @@ import type {
 } from '../../../../src/generated/server/worldmonitor/infrastructure/v1/service_server';
 
 import { UPSTREAM_TIMEOUT_MS } from './_shared';
+import { CHROME_UA } from '../../../_shared/constants';
 
 // ========================================================================
 // Constants
@@ -121,7 +122,7 @@ export async function listInternetOutages(
     const response = await fetch(
       `${CLOUDFLARE_RADAR_URL}?dateRange=7d&limit=50`,
       {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${token}`, 'User-Agent': CHROME_UA },
         signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS),
       },
     );

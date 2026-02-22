@@ -19,6 +19,7 @@ import type {
   TechEventCoords,
 } from '../../../../src/generated/server/worldmonitor/research/v1/service_server';
 import { CITY_COORDS } from '../../../../api/data/city-coords';
+import { CHROME_UA } from '../../../_shared/constants';
 
 // ---------- Constants ----------
 
@@ -255,10 +256,10 @@ async function fetchTechEvents(req: ListTechEventsRequest): Promise<ListTechEven
   // Fetch both sources in parallel
   const [icsResponse, rssResponse] = await Promise.allSettled([
     fetch(ICS_URL, {
-      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; WorldMonitor/1.0)' },
+      headers: { 'User-Agent': CHROME_UA },
     }),
     fetch(DEV_EVENTS_RSS, {
-      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; WorldMonitor/1.0)' },
+      headers: { 'User-Agent': CHROME_UA },
     }),
   ]);
 

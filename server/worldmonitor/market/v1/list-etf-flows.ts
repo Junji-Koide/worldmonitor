@@ -10,6 +10,7 @@ import type {
   EtfFlow,
 } from '../../../../src/generated/server/worldmonitor/market/v1/service_server';
 import { UPSTREAM_TIMEOUT_MS, type YahooChartResponse } from './_shared';
+import { CHROME_UA, yahooGate } from '../../../_shared/constants';
 
 // ========================================================================
 // Constants and cache
@@ -38,10 +39,11 @@ const ETF_CACHE_TTL = 900_000; // 15 minutes
 
 async function fetchEtfChart(ticker: string): Promise<YahooChartResponse | null> {
   try {
+    await yahooGate();
     const url = `https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?range=5d&interval=1d`;
     const resp = await fetch(url, {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        'User-Agent': CHROME_UA,
       },
       signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS),
     });
@@ -109,9 +111,10 @@ export async function listEtfFlows(
   }
 
   try {
-    const charts = await Promise.allSettled(
-      ETF_LIST.map(etf => fetchEtfChart(etf.ticker)),
-    );
+    const charts: PromiseSettledResult<YahooChartResponse | null>[] = [];
+    for (const etf of ETF_LIST) {
+      charts.push(await Promise.allSettled([fetchEtfChart(etf.ticker)]).then(r => r[0]!));
+    }
 
     const etfs: EtfFlow[] = [];
     for (let i = 0; i < ETF_LIST.length; i++) {
@@ -130,6 +133,11 @@ export async function listEtfFlows(
 
     etfs.sort((a, b) => b.volume - a.volume);
 
+    // Stale-while-revalidate: if Yahoo rate-limited all calls, serve cached data
+    if (etfs.length === 0 && etfCache) {
+      return etfCache;
+    }
+
     const result: ListEtfFlowsResponse = {
       timestamp: new Date().toISOString(),
       summary: {
@@ -143,8 +151,10 @@ export async function listEtfFlows(
       etfs,
     };
 
-    etfCache = result;
-    etfCacheTimestamp = now;
+    if (etfs.length > 0) {
+      etfCache = result;
+      etfCacheTimestamp = now;
+    }
     return result;
   } catch {
     if (etfCache) return etfCache;

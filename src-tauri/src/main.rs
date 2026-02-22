@@ -61,6 +61,14 @@ struct SecretsCache {
     secrets: Mutex<HashMap<String, String>>,
 }
 
+/// In-memory mirror of persistent-cache.json. The file can grow to 10+ MB,
+/// so reading/parsing/writing it on every IPC call blocks the main thread.
+/// Instead, load once into RAM and flush dirty writes via a background task.
+struct PersistentCache {
+    data: Mutex<Map<String, Value>>,
+    dirty: Mutex<bool>,
+}
+
 impl SecretsCache {
     fn load_from_keychain() -> Self {
         // Try consolidated vault first — single keychain prompt
@@ -109,6 +117,51 @@ impl SecretsCache {
         }
 
         SecretsCache { secrets: Mutex::new(secrets) }
+    }
+}
+
+impl PersistentCache {
+    fn load(path: &Path) -> Self {
+        let data = if path.exists() {
+            std::fs::read_to_string(path)
+                .ok()
+                .and_then(|s| serde_json::from_str::<Value>(&s).ok())
+                .and_then(|v| v.as_object().cloned())
+                .unwrap_or_default()
+        } else {
+            Map::new()
+        };
+        PersistentCache {
+            data: Mutex::new(data),
+            dirty: Mutex::new(false),
+        }
+    }
+
+    fn get(&self, key: &str) -> Option<Value> {
+        let data = self.data.lock().unwrap_or_else(|e| e.into_inner());
+        data.get(key).cloned()
+    }
+
+    fn set(&self, key: String, value: Value) {
+        let mut data = self.data.lock().unwrap_or_else(|e| e.into_inner());
+        data.insert(key, value);
+        let mut dirty = self.dirty.lock().unwrap_or_else(|e| e.into_inner());
+        *dirty = true;
+    }
+
+    /// Flush to disk only if dirty. Returns Ok(true) if written.
+    fn flush(&self, path: &Path) -> Result<bool, String> {
+        let mut dirty = self.dirty.lock().unwrap_or_else(|e| e.into_inner());
+        if !*dirty {
+            return Ok(false);
+        }
+        let data = self.data.lock().unwrap_or_else(|e| e.into_inner());
+        let serialized = serde_json::to_string(&Value::Object(data.clone()))
+            .map_err(|e| format!("Failed to serialize cache: {e}"))?;
+        std::fs::write(path, serialized)
+            .map_err(|e| format!("Failed to write cache {}: {e}", path.display()))?;
+        *dirty = false;
+        Ok(true)
     }
 }
 
@@ -224,45 +277,33 @@ fn cache_file_path(app: &AppHandle) -> Result<PathBuf, String> {
 }
 
 #[tauri::command]
-fn read_cache_entry(app: AppHandle, key: String) -> Result<Option<Value>, String> {
-    let path = cache_file_path(&app)?;
-    if !path.exists() {
-        return Ok(None);
-    }
-
-    let contents = std::fs::read_to_string(&path)
-        .map_err(|e| format!("Failed to read cache store {}: {e}", path.display()))?;
-    let parsed: Value = serde_json::from_str(&contents).unwrap_or_else(|_| Value::Object(Map::new()));
-    let Some(root) = parsed.as_object() else {
-        return Ok(None);
-    };
-
-    Ok(root.get(&key).cloned())
+fn read_cache_entry(cache: tauri::State<'_, PersistentCache>, key: String) -> Result<Option<Value>, String> {
+    Ok(cache.get(&key))
 }
 
 #[tauri::command]
-fn write_cache_entry(app: AppHandle, key: String, value: String) -> Result<(), String> {
-    let path = cache_file_path(&app)?;
-
-    let mut root: Map<String, Value> = if path.exists() {
-        let contents = std::fs::read_to_string(&path)
-            .map_err(|e| format!("Failed to read cache store {}: {e}", path.display()))?;
-        serde_json::from_str::<Value>(&contents)
-            .ok()
-            .and_then(|v| v.as_object().cloned())
-            .unwrap_or_default()
-    } else {
-        Map::new()
-    };
-
+fn write_cache_entry(app: AppHandle, cache: tauri::State<'_, PersistentCache>, key: String, value: String) -> Result<(), String> {
     let parsed_value: Value = serde_json::from_str(&value)
         .map_err(|e| format!("Invalid cache payload JSON: {e}"))?;
-    root.insert(key, parsed_value);
+    cache.set(key, parsed_value);
 
-    let serialized = serde_json::to_string_pretty(&Value::Object(root))
-        .map_err(|e| format!("Failed to serialize cache store: {e}"))?;
-    std::fs::write(&path, serialized)
-        .map_err(|e| format!("Failed to write cache store {}: {e}", path.display()))
+    // Snapshot current data and flush in background — don't block the main thread
+    let snapshot = {
+        let data = cache.data.lock().unwrap_or_else(|e| e.into_inner());
+        data.clone()
+    };
+    let path = cache_file_path(&app)?;
+    // Mark clean immediately; background thread owns this snapshot
+    {
+        let mut dirty = cache.dirty.lock().unwrap_or_else(|e| e.into_inner());
+        *dirty = false;
+    }
+    std::thread::spawn(move || {
+        if let Ok(s) = serde_json::to_string(&Value::Object(snapshot)) {
+            let _ = std::fs::write(&path, s);
+        }
+    });
+    Ok(())
 }
 
 fn logs_dir_path(app: &AppHandle) -> Result<PathBuf, String> {
@@ -425,6 +466,7 @@ fn open_settings_window(app: &AppHandle) -> Result<(), String> {
         .inner_size(980.0, 760.0)
         .min_inner_size(820.0, 620.0)
         .resizable(true)
+        .background_color(tauri::webview::Color(26, 28, 30, 255))
         .build()
         .map_err(|e| format!("Failed to create settings window: {e}"))?;
 
@@ -783,6 +825,10 @@ fn main() {
             fetch_polymarket
         ])
         .setup(|app| {
+            // Load persistent cache into memory (avoids 14MB file I/O on every IPC call)
+            let cache_path = cache_file_path(&app.handle()).unwrap_or_default();
+            app.manage(PersistentCache::load(&cache_path));
+
             if let Err(err) = start_local_api(&app.handle()) {
                 append_desktop_log(
                     &app.handle(),
@@ -830,6 +876,12 @@ fn main() {
                     }
                 }
                 RunEvent::ExitRequested { .. } | RunEvent::Exit => {
+                    // Flush in-memory cache to disk before quitting
+                    if let Ok(path) = cache_file_path(app) {
+                        if let Some(cache) = app.try_state::<PersistentCache>() {
+                            let _ = cache.flush(&path);
+                        }
+                    }
                     stop_local_api(app);
                 }
                 _ => {}

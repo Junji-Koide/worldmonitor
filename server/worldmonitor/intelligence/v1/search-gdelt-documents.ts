@@ -6,6 +6,7 @@ import type {
 } from '../../../../src/generated/server/worldmonitor/intelligence/v1/service_server';
 
 import { UPSTREAM_TIMEOUT_MS } from './_shared';
+import { CHROME_UA } from '../../../_shared/constants';
 
 // ========================================================================
 // Constants
@@ -44,6 +45,7 @@ export async function searchGdeltDocuments(
     gdeltUrl.searchParams.set('timespan', timespan);
 
     const response = await fetch(gdeltUrl.toString(), {
+      headers: { 'User-Agent': CHROME_UA },
       signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS),
     });
 

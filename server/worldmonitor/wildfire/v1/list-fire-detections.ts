@@ -17,6 +17,8 @@ import type {
   FireConfidence,
 } from '../../../../src/generated/server/worldmonitor/wildfire/v1/service_server';
 
+import { CHROME_UA } from '../../../_shared/constants';
+
 const FIRMS_SOURCE = 'VIIRS_SNPP_NRT';
 
 /** Bounding boxes as west,south,east,north */
@@ -97,7 +99,7 @@ export const listFireDetections: WildfireServiceHandler['listFireDetections'] = 
     entries.map(async ([regionName, bbox]) => {
       const url = `https://firms.modaps.eosdis.nasa.gov/api/area/csv/${apiKey}/${FIRMS_SOURCE}/${bbox}/1`;
       const res = await fetch(url, {
-        headers: { Accept: 'text/csv' },
+        headers: { Accept: 'text/csv', 'User-Agent': CHROME_UA },
         signal: AbortSignal.timeout(15_000),
       });
       if (!res.ok) {

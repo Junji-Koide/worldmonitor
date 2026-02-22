@@ -9,6 +9,7 @@ import type {
   GetCountryStockIndexResponse,
 } from '../../../../src/generated/server/worldmonitor/market/v1/service_server';
 import { UPSTREAM_TIMEOUT_MS, type YahooChartResponse } from './_shared';
+import { CHROME_UA } from '../../../_shared/constants';
 
 // ========================================================================
 // Country-to-index mapping
@@ -95,7 +96,7 @@ export async function getCountryStockIndex(
     const yahooUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${encodedSymbol}?range=1mo&interval=1d`;
 
     const res = await fetch(yahooUrl, {
-      headers: { 'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)' },
+      headers: { 'User-Agent': CHROME_UA },
       signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS),
     });
 

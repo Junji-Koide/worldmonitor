@@ -6,6 +6,7 @@
  */
 
 import { XMLParser } from 'fast-xml-parser';
+import { CHROME_UA } from '../../../_shared/constants';
 import type {
   ServerContext,
   ListArxivPapersRequest,
@@ -38,7 +39,7 @@ async function fetchArxivPapers(req: ListArxivPapersRequest): Promise<ArxivPaper
   const url = `https://export.arxiv.org/api/query?search_query=${searchQuery}&start=0&max_results=${pageSize}`;
 
   const response = await fetch(url, {
-    headers: { Accept: 'application/xml' },
+    headers: { Accept: 'application/xml', 'User-Agent': CHROME_UA },
     signal: AbortSignal.timeout(15000),
   });
 

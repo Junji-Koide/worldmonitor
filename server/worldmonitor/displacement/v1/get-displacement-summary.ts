@@ -12,6 +12,8 @@ import type {
   GeoCoordinates,
 } from '../../../../src/generated/server/worldmonitor/displacement/v1/service_server';
 
+import { CHROME_UA } from '../../../_shared/constants';
+
 // ---------- Country centroids (ISO3 -> [lat, lon]) ----------
 
 const COUNTRY_CENTROIDS: Record<string, [number, number]> = {
@@ -51,7 +53,7 @@ async function fetchUnhcrYearItems(year: number): Promise<UnhcrRawItem[] | null>
   for (let page = 1; page <= maxPageGuard; page++) {
     const response = await fetch(
       `https://api.unhcr.org/population/v1/population/?year=${year}&limit=${limit}&page=${page}`,
-      { headers: { Accept: 'application/json' } },
+      { headers: { Accept: 'application/json', 'User-Agent': CHROME_UA } },
     );
 
     if (!response.ok) return null;

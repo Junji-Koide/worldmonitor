@@ -10,6 +10,7 @@ import type {
   Stablecoin,
 } from '../../../../src/generated/server/worldmonitor/market/v1/service_server';
 import { UPSTREAM_TIMEOUT_MS } from './_shared';
+import { CHROME_UA } from '../../../_shared/constants';
 
 // ========================================================================
 // Constants and cache
@@ -57,7 +58,7 @@ export async function listStablecoinMarkets(
   try {
     const url = `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${coins}&order=market_cap_desc&sparkline=false&price_change_percentage=7d`;
     const resp = await fetch(url, {
-      headers: { Accept: 'application/json' },
+      headers: { Accept: 'application/json', 'User-Agent': CHROME_UA },
       signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS),
     });
 

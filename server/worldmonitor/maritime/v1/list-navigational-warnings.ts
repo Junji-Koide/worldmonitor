@@ -5,6 +5,8 @@ import type {
   NavigationalWarning,
 } from '../../../../src/generated/server/worldmonitor/maritime/v1/service_server';
 
+import { CHROME_UA } from '../../../_shared/constants';
+
 // ========================================================================
 // Helpers
 // ========================================================================
@@ -31,7 +33,7 @@ function parseNgaDate(dateStr: unknown): number {
 async function fetchNgaWarnings(area?: string): Promise<NavigationalWarning[]> {
   try {
     const response = await fetch(NGA_WARNINGS_URL, {
-      headers: { Accept: 'application/json' },
+      headers: { Accept: 'application/json', 'User-Agent': CHROME_UA },
       signal: AbortSignal.timeout(15000),
     });
 

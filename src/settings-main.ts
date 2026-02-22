@@ -81,12 +81,21 @@ async function initSettingsWindow(): Promise<void> {
   requestAnimationFrame(() => {
     document.documentElement.classList.remove('no-transition');
   });
-  await loadDesktopSecrets();
 
   const llmMount = document.getElementById('llmApp');
   const apiMount = document.getElementById('apiKeysApp');
   const wmMount = document.getElementById('worldmonitorApp');
   if (!llmMount || !apiMount) return;
+
+  // Mount WorldMonitor tab immediately — it doesn't depend on secrets
+  const wmTab = new WorldMonitorTab();
+  if (wmMount) {
+    wmMount.innerHTML = '';
+    wmMount.appendChild(wmTab.getElement());
+  }
+
+  // Load secrets then mount config panels — don't block the shell
+  await loadDesktopSecrets();
 
   const llmPanel = new RuntimeConfigPanel({ mode: 'full', buffered: true, featureFilter: LLM_FEATURES });
   const apiPanel = new RuntimeConfigPanel({
@@ -97,12 +106,6 @@ async function initSettingsWindow(): Promise<void> {
 
   mountPanel(llmPanel, llmMount);
   mountPanel(apiPanel, apiMount);
-
-  const wmTab = new WorldMonitorTab();
-  if (wmMount) {
-    wmMount.innerHTML = '';
-    wmMount.appendChild(wmTab.getElement());
-  }
 
   const panels = [llmPanel, apiPanel];
 

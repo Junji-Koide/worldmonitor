@@ -12,6 +12,8 @@ import type {
   GithubRepo,
 } from '../../../../src/generated/server/worldmonitor/research/v1/service_server';
 
+import { CHROME_UA } from '../../../_shared/constants';
+
 // ---------- Fetch ----------
 
 async function fetchTrendingRepos(req: ListTrendingReposRequest): Promise<GithubRepo[]> {
@@ -25,7 +27,7 @@ async function fetchTrendingRepos(req: ListTrendingReposRequest): Promise<Github
 
   try {
     const response = await fetch(primaryUrl, {
-      headers: { Accept: 'application/json', 'User-Agent': 'WorldMonitor/1.0' },
+      headers: { Accept: 'application/json', 'User-Agent': CHROME_UA },
       signal: AbortSignal.timeout(10000),
     });
 
@@ -36,7 +38,7 @@ async function fetchTrendingRepos(req: ListTrendingReposRequest): Promise<Github
     try {
       const fallbackUrl = `https://gh-trending-api.herokuapp.com/repositories/${language}?since=${period}`;
       const fallbackResponse = await fetch(fallbackUrl, {
-        headers: { Accept: 'application/json' },
+        headers: { Accept: 'application/json', 'User-Agent': CHROME_UA },
         signal: AbortSignal.timeout(10000),
       });
 

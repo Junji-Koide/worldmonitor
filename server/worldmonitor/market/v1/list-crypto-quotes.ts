@@ -15,30 +15,35 @@ export async function listCryptoQuotes(
   _ctx: ServerContext,
   req: ListCryptoQuotesRequest,
 ): Promise<ListCryptoQuotesResponse> {
-  try {
-    const ids = req.ids.length > 0 ? req.ids : Object.keys(CRYPTO_META);
-    const items = await fetchCoinGeckoMarkets(ids);
+  const ids = req.ids.length > 0 ? req.ids : Object.keys(CRYPTO_META);
+  const items = await fetchCoinGeckoMarkets(ids);
 
-    const byId = new Map(items.map((c) => [c.id, c]));
-    const quotes: CryptoQuote[] = [];
-
-    for (const id of ids) {
-      const coin = byId.get(id);
-      const meta = CRYPTO_META[id];
-      const prices = coin?.sparkline_in_7d?.price;
-      const sparkline = prices && prices.length > 24 ? prices.slice(-48) : (prices || []);
-
-      quotes.push({
-        name: meta?.name || id,
-        symbol: meta?.symbol || id.toUpperCase(),
-        price: coin?.current_price ?? 0,
-        change: coin?.price_change_percentage_24h ?? 0,
-        sparkline,
-      });
-    }
-
-    return { quotes };
-  } catch {
-    return { quotes: [] };
+  if (items.length === 0) {
+    throw new Error('CoinGecko returned no data');
   }
+
+  const byId = new Map(items.map((c) => [c.id, c]));
+  const quotes: CryptoQuote[] = [];
+
+  for (const id of ids) {
+    const coin = byId.get(id);
+    if (!coin) continue;
+    const meta = CRYPTO_META[id];
+    const prices = coin.sparkline_in_7d?.price;
+    const sparkline = prices && prices.length > 24 ? prices.slice(-48) : (prices || []);
+
+    quotes.push({
+      name: meta?.name || id,
+      symbol: meta?.symbol || id.toUpperCase(),
+      price: coin.current_price ?? 0,
+      change: coin.price_change_percentage_24h ?? 0,
+      sparkline,
+    });
+  }
+
+  if (quotes.every(q => q.price === 0)) {
+    throw new Error('CoinGecko returned all-zero prices');
+  }
+
+  return { quotes };
 }

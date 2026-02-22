@@ -8,6 +8,7 @@ import type {
 } from '../../../../src/generated/server/worldmonitor/military/v1/service_server';
 
 import { mapWingbitsDetails } from './_shared';
+import { CHROME_UA } from '../../../_shared/constants';
 
 export async function getAircraftDetailsBatch(
   _ctx: ServerContext,
@@ -22,7 +23,7 @@ export async function getAircraftDetailsBatch(
   const fetches = limitedList.map(async (icao24) => {
     try {
       const resp = await fetch(`https://customer-api.wingbits.com/v1/flights/details/${icao24}`, {
-        headers: { 'x-api-key': apiKey, Accept: 'application/json' },
+        headers: { 'x-api-key': apiKey, Accept: 'application/json', 'User-Agent': CHROME_UA },
         signal: AbortSignal.timeout(10_000),
       });
       if (resp.ok) {

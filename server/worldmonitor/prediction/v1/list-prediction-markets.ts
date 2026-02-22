@@ -15,6 +15,8 @@ import type {
   PredictionMarket,
 } from '../../../../src/generated/server/worldmonitor/prediction/v1/service_server';
 
+import { CHROME_UA } from '../../../_shared/constants';
+
 const GAMMA_BASE = 'https://gamma-api.polymarket.com';
 const FETCH_TIMEOUT = 8000;
 
@@ -120,7 +122,7 @@ export const listPredictionMarkets: PredictionServiceHandler['listPredictionMark
       const response = await fetch(
         `${GAMMA_BASE}/${endpoint}?${params}`,
         {
-          headers: { Accept: 'application/json' },
+          headers: { Accept: 'application/json', 'User-Agent': CHROME_UA },
           signal: controller.signal,
         },
       );

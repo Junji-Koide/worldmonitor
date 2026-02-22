@@ -24,6 +24,7 @@ import {
   deduplicateEvents,
   sortBySeverityAndRecency,
 } from './_shared';
+import { CHROME_UA } from '../../../_shared/constants';
 
 // ---------- ACLED Fetch (ported from api/acled.js + src/services/protests.ts) ----------
 
@@ -54,6 +55,7 @@ async function fetchAcledProtests(req: ListUnrestEventsRequest): Promise<UnrestE
       headers: {
         Accept: 'application/json',
         Authorization: `Bearer ${token}`,
+        'User-Agent': CHROME_UA,
       },
       signal: AbortSignal.timeout(15000),
     });
@@ -117,7 +119,7 @@ async function fetchGdeltEvents(): Promise<UnrestEvent[]> {
     });
 
     const response = await fetch(`${GDELT_GEO_URL}?${params}`, {
-      headers: { Accept: 'application/json' },
+      headers: { Accept: 'application/json', 'User-Agent': CHROME_UA },
       signal: AbortSignal.timeout(10000),
     });
 

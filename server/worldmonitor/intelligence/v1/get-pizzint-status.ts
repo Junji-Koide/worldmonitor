@@ -10,6 +10,7 @@ import type {
 } from '../../../../src/generated/server/worldmonitor/intelligence/v1/service_server';
 
 import { UPSTREAM_TIMEOUT_MS } from './_shared';
+import { CHROME_UA } from '../../../_shared/constants';
 
 // ========================================================================
 // Constants
@@ -27,33 +28,35 @@ export async function getPizzintStatus(
   _ctx: ServerContext,
   req: GetPizzintStatusRequest,
 ): Promise<GetPizzintStatusResponse> {
-  // Fetch PizzINT dashboard data
+  // Fetch PizzINT dashboard data — throw on failure so sidecar returns non-OK
+  // and the runtime fetch patch falls back to cloud
   let pizzint: PizzintStatus | undefined;
-  try {
+  {
     const resp = await fetch(PIZZINT_API, {
-      headers: { Accept: 'application/json', 'User-Agent': 'WorldMonitor/1.0' },
+      headers: { Accept: 'application/json', 'User-Agent': CHROME_UA },
       signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS),
     });
-    if (resp.ok) {
-      const raw = (await resp.json()) as {
-        success?: boolean;
-        data?: Array<{
-          place_id: string;
-          name: string;
-          address: string;
-          current_popularity: number;
-          percentage_of_usual: number | null;
-          is_spike: boolean;
-          spike_magnitude: number | null;
-          data_source: string;
-          recorded_at: string;
-          data_freshness: string;
-          is_closed_now?: boolean;
-          lat?: number;
-          lng?: number;
-        }>;
-      };
-      if (raw.success && raw.data) {
+    if (!resp.ok) throw new Error(`PizzINT API returned ${resp.status}`);
+
+    const raw = (await resp.json()) as {
+      success?: boolean;
+      data?: Array<{
+        place_id: string;
+        name: string;
+        address: string;
+        current_popularity: number;
+        percentage_of_usual: number | null;
+        is_spike: boolean;
+        spike_magnitude: number | null;
+        data_source: string;
+        recorded_at: string;
+        data_freshness: string;
+        is_closed_now?: boolean;
+        lat?: number;
+        lng?: number;
+      }>;
+    };
+    if (raw.success && raw.data) {
         const locations: PizzintLocation[] = raw.data.map((d) => ({
           placeId: d.place_id,
           name: d.name,
@@ -102,7 +105,6 @@ export async function getPizzintStatus(
         };
       }
     }
-  } catch { /* pizzint unavailable */ }
 
   // Fetch GDELT tension pairs
   let tensionPairs: GdeltTensionPair[] = [];
@@ -110,7 +112,7 @@ export async function getPizzintStatus(
     try {
       const url = `${GDELT_BATCH_API}?pairs=${encodeURIComponent(DEFAULT_GDELT_PAIRS)}&method=gpr`;
       const resp = await fetch(url, {
-        headers: { Accept: 'application/json', 'User-Agent': 'WorldMonitor/1.0' },
+        headers: { Accept: 'application/json', 'User-Agent': CHROME_UA },
         signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS),
       });
       if (resp.ok) {

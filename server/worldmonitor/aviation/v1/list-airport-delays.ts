@@ -18,6 +18,7 @@ import {
   determineSeverity,
   generateSimulatedDelay,
 } from './_shared';
+import { CHROME_UA } from '../../../_shared/constants';
 
 export async function listAirportDelays(
   _ctx: ServerContext,
@@ -28,7 +29,7 @@ export async function listAirportDelays(
 
     // 1. Fetch and parse FAA XML
     const faaResponse = await fetch(FAA_URL, {
-      headers: { Accept: 'application/xml' },
+      headers: { Accept: 'application/xml', 'User-Agent': CHROME_UA },
       signal: AbortSignal.timeout(15_000),
     });
 
