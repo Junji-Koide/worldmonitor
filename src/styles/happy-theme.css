@@ -1,0 +1,179 @@
+/* ============================================================
+   Happy Variant Theme — Calm & Serene
+   Sage green + warm gold on cream. No dark military aesthetic.
+   ============================================================ */
+
+/* ---------- Happy Light Mode (default) ---------- */
+[data-variant="happy"],
+[data-variant="happy"][data-theme="light"] {
+  /* Backgrounds */
+  --bg: #FAFAF5;
+  --bg-secondary: #F5F3EE;
+  --surface: #FFFFFF;
+  --surface-hover: #F5F2EC;
+  --surface-active: #EDE9E0;
+
+  /* Borders */
+  --border: #DDD9CF;
+  --border-strong: #C8C2B5;
+  --border-subtle: #EBE8E0;
+
+  /* Text */
+  --text: #2D3A2E;
+  --text-secondary: #4A5A4C;
+  --text-dim: #6B7A6D;
+  --text-muted: #8A9A8C;
+  --text-faint: #A8B4AA;
+  --text-ghost: #C0C8C2;
+  --accent: #3D4A3E;
+
+  /* Overlays & shadows */
+  --overlay-subtle: rgba(107, 143, 94, 0.03);
+  --overlay-light: rgba(107, 143, 94, 0.05);
+  --overlay-medium: rgba(107, 143, 94, 0.08);
+  --overlay-heavy: rgba(107, 143, 94, 0.12);
+  --shadow-color: rgba(80, 70, 50, 0.08);
+  --darken-light: rgba(80, 70, 50, 0.06);
+  --darken-medium: rgba(80, 70, 50, 0.10);
+  --darken-heavy: rgba(80, 70, 50, 0.15);
+
+  /* Scrollbar */
+  --scrollbar-thumb: #C8C2B5;
+  --scrollbar-thumb-hover: #A8A298;
+
+  /* Input */
+  --input-bg: #F2EFE8;
+
+  /* Panels */
+  --panel-bg: #FFFFFF;
+  --panel-border: #DDD9CF;
+
+  /* Map */
+  --map-bg: #D4E6EC;
+  --map-grid: #C0D8D8;
+  --map-country: #B9CDA8;
+  --map-stroke: #C8C0B5;
+
+  /* Typography — Nunito rounded sans-serif */
+  --font-body: 'Nunito', system-ui, -apple-system, sans-serif;
+
+  /* Panel border radius — soft rounded corners */
+  --panel-radius: 14px;
+}
+
+/* ---------- Happy Dark Mode ---------- */
+[data-variant="happy"][data-theme="dark"] {
+  /* Backgrounds — deep navy, warm darks */
+  --bg: #1A2332;
+  --bg-secondary: #1E2838;
+  --surface: #222E3E;
+  --surface-hover: #2A3848;
+  --surface-active: #2E3E50;
+
+  /* Borders */
+  --border: #344050;
+  --border-strong: #445868;
+  --border-subtle: #283545;
+
+  /* Text — warm off-whites */
+  --text: #E8E4DC;
+  --text-secondary: #D0CCC4;
+  --text-dim: #A0A098;
+  --text-muted: #808880;
+  --text-faint: #606860;
+  --text-ghost: #485048;
+  --accent: #E8E4DC;
+
+  /* Overlays & shadows */
+  --overlay-subtle: rgba(139, 175, 122, 0.03);
+  --overlay-light: rgba(139, 175, 122, 0.06);
+  --overlay-medium: rgba(139, 175, 122, 0.10);
+  --overlay-heavy: rgba(139, 175, 122, 0.18);
+  --shadow-color: rgba(0, 0, 0, 0.30);
+  --darken-light: rgba(0, 0, 0, 0.15);
+  --darken-medium: rgba(0, 0, 0, 0.20);
+  --darken-heavy: rgba(0, 0, 0, 0.30);
+
+  /* Scrollbar */
+  --scrollbar-thumb: #445868;
+  --scrollbar-thumb-hover: #5A6E80;
+
+  /* Input */
+  --input-bg: #283545;
+
+  /* Panels */
+  --panel-bg: #222E3E;
+  --panel-border: #344050;
+
+  /* Map */
+  --map-bg: #16202E;
+  --map-grid: #1E3040;
+  --map-country: #2D4035;
+  --map-stroke: #3D5045;
+
+  /* Typography inherits from light variant selector */
+  --font-body: 'Nunito', system-ui, -apple-system, sans-serif;
+
+  /* Panel border radius — soft rounded corners */
+  --panel-radius: 14px;
+}
+
+/* ---------- Happy Semantic Colors (both modes) ---------- */
+[data-variant="happy"] {
+  /* Severity levels — remapped to positive semantics */
+  --semantic-critical: #C4A35A;    /* celebration gold */
+  --semantic-high: #6B8F5E;        /* growth green (sage) */
+  --semantic-elevated: #7BA5C4;    /* hope blue */
+  --semantic-normal: #6B8F5E;      /* growth green */
+  --semantic-low: #C48B9F;         /* kindness pink */
+  --semantic-info: #7BA5C4;        /* hope blue */
+
+  /* Threat levels — remapped to positive tones */
+  --threat-critical: #C4A35A;      /* gold */
+  --threat-high: #8BAF7A;          /* lighter sage */
+  --threat-medium: #7BA5C4;        /* blue */
+  --threat-low: #6B8F5E;           /* sage green */
+  --threat-info: #7BA5C4;          /* blue */
+
+  /* DEFCON levels — warm gradient instead of warning */
+  --defcon-1: #C4A35A;
+  --defcon-2: #A8B86B;
+  --defcon-3: #7BA5C4;
+  --defcon-4: #6B8F5E;
+  --defcon-5: #8BAF7A;
+
+  /* Status indicators */
+  --status-live: #6B8F5E;          /* sage green pulse */
+  --status-cached: #C4A35A;        /* warm gold */
+  --status-unavailable: #C48B9F;   /* soft pink, not alarming red */
+
+  /* Legacy color aliases */
+  --red: #C48B9F;                  /* kindness pink replaces red */
+  --green: #6B8F5E;               /* sage green */
+  --yellow: #C4A35A;              /* warm gold */
+}
+
+/* ---------- Happy Dark Mode Semantic Adjustments ---------- */
+[data-variant="happy"][data-theme="dark"] {
+  /* Lighter variants for dark backgrounds */
+  --semantic-critical: #D4B36A;
+  --semantic-high: #8BAF7A;
+  --semantic-elevated: #8BB5D4;
+  --semantic-normal: #8BAF7A;
+  --semantic-low: #D49BAF;
+  --semantic-info: #8BB5D4;
+
+  --threat-critical: #D4B36A;
+  --threat-high: #9BBF8A;
+  --threat-medium: #8BB5D4;
+  --threat-low: #8BAF7A;
+  --threat-info: #8BB5D4;
+
+  --status-live: #8BAF7A;
+  --status-cached: #D4B36A;
+  --status-unavailable: #D49BAF;
+
+  --red: #D49BAF;
+  --green: #8BAF7A;
+  --yellow: #D4B36A;
+}
