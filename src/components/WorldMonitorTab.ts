@@ -140,6 +140,10 @@ export class WorldMonitorTab {
     this.keyBadge.className = `wm-badge ${state.present ? 'ok' : 'warn'}`;
   }
 
+  refresh(): void {
+    this.render();
+  }
+
   getElement(): HTMLElement {
     return this.el;
   }

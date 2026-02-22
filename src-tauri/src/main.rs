@@ -287,22 +287,19 @@ fn write_cache_entry(app: AppHandle, cache: tauri::State<'_, PersistentCache>, k
         .map_err(|e| format!("Invalid cache payload JSON: {e}"))?;
     cache.set(key, parsed_value);
 
-    // Snapshot current data and flush in background — don't block the main thread
-    let snapshot = {
-        let data = cache.data.lock().unwrap_or_else(|e| e.into_inner());
-        data.clone()
-    };
+    // Flush synchronously — JSON file write is fast and avoids race conditions
+    // where out-of-order background threads overwrite newer data.
     let path = cache_file_path(&app)?;
-    // Mark clean immediately; background thread owns this snapshot
+    let data = cache.data.lock().unwrap_or_else(|e| e.into_inner());
+    let serialized = serde_json::to_string(&Value::Object(data.clone()))
+        .map_err(|e| format!("Failed to serialize cache: {e}"))?;
+    drop(data);
+    std::fs::write(&path, &serialized)
+        .map_err(|e| format!("Failed to write cache {}: {e}", path.display()))?;
     {
         let mut dirty = cache.dirty.lock().unwrap_or_else(|e| e.into_inner());
         *dirty = false;
     }
-    std::thread::spawn(move || {
-        if let Ok(s) = serde_json::to_string(&Value::Object(snapshot)) {
-            let _ = std::fs::write(&path, s);
-        }
-    });
     Ok(())
 }
 

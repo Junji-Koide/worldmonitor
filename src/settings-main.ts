@@ -94,8 +94,9 @@ async function initSettingsWindow(): Promise<void> {
     wmMount.appendChild(wmTab.getElement());
   }
 
-  // Load secrets then mount config panels — don't block the shell
+  // Load secrets then refresh WorldMonitor tab to reflect actual key status
   await loadDesktopSecrets();
+  wmTab.refresh();
 
   const llmPanel = new RuntimeConfigPanel({ mode: 'full', buffered: true, featureFilter: LLM_FEATURES });
   const apiPanel = new RuntimeConfigPanel({
