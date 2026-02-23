@@ -19,6 +19,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 5: Humanity Data Panels** - Live ticking counters and long-term progress charts showing humanity getting better (completed 2026-02-23)
 - [x] **Phase 6: Content Spotlight Panels** - Scientific breakthroughs ticker, today's best human spotlight, and daily digest (completed 2026-02-23)
 - [ ] **Phase 7: Conservation & Energy Trackers** - Species comeback cards and renewable energy growth visualizations
+- [ ] **Phase 7.1: Renewable Energy Installation & Coal Retirement Data** - EIA capacity data for solar/wind growth and coal plant closures (INSERTED — gap closure from Phase 7 verification)
 - [x] **Phase 8: Map Data Overlays** - World happiness heatmap, species recovery zones, and renewable energy installation layers (completed 2026-02-23)
 - [ ] **Phase 9: Sharing, TV Mode & Polish** - Shareable story cards, full-screen ambient mode, and celebration animations
 
@@ -138,6 +139,20 @@ Plans:
 - [ ] 07-02-PLAN.md -- Renewable energy data service + RenewableEnergyPanel with D3 arc gauge (ENERGY-01, ENERGY-02, ENERGY-03)
 - [ ] 07-03-PLAN.md -- App.ts panel wiring, happy.ts config, and happy-theme.css styling (all requirements)
 
+### Phase 7.1: Renewable Energy Installation & Coal Retirement Data (INSERTED)
+**Goal**: The renewable energy panel gains solar/wind installation growth and coal plant closure visualizations using EIA operating-generator-capacity data, closing verification gaps from Phase 7
+**Depends on**: Phase 7
+**Requirements**: ENERGY-01, ENERGY-03
+**Gap Closure**: Closes gaps from Phase 7 verification (07-VERIFICATION.md)
+**Success Criteria** (what must be TRUE):
+  1. The renewable energy panel visualizes solar and wind installed capacity (MW) growing over time using EIA operating-generator-capacity data
+  2. The panel shows coal plant retirements/closures as a declining trend using EIA coal capacity data (BIT/SUB/LIG/RC energy source codes)
+  3. Both EIA and World Bank (IEA-sourced) data are used together — the existing gauge shows renewable %, the new visualization shows installation growth and coal decline
+**Plans**: TBD
+
+Plans:
+- [ ] 71-01-PLAN.md -- TBD
+
 ### Phase 8: Map Data Overlays
 **Goal**: The map gains choropleth and overlay layers for world happiness, species recovery zones, and renewable energy installations
 **Depends on**: Phase 4, Phase 7
@@ -172,7 +187,7 @@ Plans:
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9
+Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 7.1 -> 8 -> 9
 
 Note: Phases 4, 5, 6, 7 can partially parallelize after Phase 2 completes (they share the variant shell and content pipeline as prerequisites but are otherwise independent).
 
@@ -184,6 +199,7 @@ Note: Phases 4, 5, 6, 7 can partially parallelize after Phase 2 completes (they 
 | 4. Global Map & Positive Events | 0/3 | Complete    | 2026-02-23 |
 | 5. Humanity Data Panels | 0/3 | Complete    | 2026-02-23 |
 | 6. Content Spotlight Panels | 0/3 | Complete    | 2026-02-23 |
-| 7. Conservation & Energy Trackers | 0/2 | Not started | - |
-| 8. Map Data Overlays | 0/2 | Complete    | 2026-02-23 |
+| 7. Conservation & Energy Trackers | 3/3 | Complete | 2026-02-23 |
+| 7.1 Renewable Energy Installation & Coal Data | 0/1 | Not started | - |
+| 8. Map Data Overlays | 2/2 | Complete    | 2026-02-23 |
 | 9. Sharing, TV Mode & Polish | 0/3 | Not started | - |
