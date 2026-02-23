@@ -65,6 +65,10 @@ Recent decisions affecting current work:
 - [02-02]: Source-based pre-mapping for GNN category feeds (fast path) before keyword scan (slow path).
 - [02-03]: In-place for..of mutation in loadNewsCategory() since items array already referenced by closures.
 - [02-03]: Classification after fetchCategoryFeeds completes (not in onBatch callback) -- final render uses complete set.
+- [03-01]: Additive-only guards -- all changes use SITE_VARIANT !== 'happy' to avoid touching full/tech/finance paths.
+- [03-01]: Natural map layer kept for happy variant (earthquakes informational, not geopolitical).
+- [03-01]: InsightsPanel available for all variants since it adapts to available data.
+- [03-01]: Defense-in-depth for LiveNewsPanel: both panel creation gating AND empty channels array.
 - [03-02]: CSS variable names in plan were hypothetical -- mapped to actual happy theme vars (--yellow for gold, --green for sage, --semantic-info for hope-blue, --red for kindness-pink).
 - [03-02]: Category badge colors: science=blue, nature=green, kindness=pink, innovation=gold, climate=#2d9a4e, culture=#8b5cf6.
 - [03-02]: extractImageUrl uses 4-strategy fallback with try/catch per strategy -- never throws, always returns undefined on failure.
@@ -82,5 +86,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-23
-Stopped at: Completed 03-02-PLAN.md (Positive News Feed Panel)
-Resume file: .planning/phases/03-positive-news-feed-quality-pipeline/03-02-SUMMARY.md
+Stopped at: Re-executed 03-01-PLAN.md (Happy Variant App.ts Integration) -- 2/3 phase 3 plans done
+Resume file: .planning/phases/03-positive-news-feed-quality-pipeline/03-01-SUMMARY.md
