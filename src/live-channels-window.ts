@@ -10,6 +10,7 @@ import {
   getDefaultLiveChannels,
 } from '@/components/LiveNewsPanel';
 import { t } from '@/services/i18n';
+import { escapeHtml } from '@/utils/sanitize';
 
 /** Builds a stable custom channel id from a YouTube handle (e.g. @Foo -> custom-foo). */
 function customChannelIdFromHandle(handle: string): string {
@@ -277,25 +278,25 @@ export function initLiveChannelsWindow(): void {
   appEl.innerHTML = `
     <div class="live-channels-window-shell">
       <div class="live-channels-window-header">
-        <span class="live-channels-window-title">${t('components.liveNews.manage') ?? 'Channel management'}</span>
+        <span class="live-channels-window-title">${escapeHtml(t('components.liveNews.manage') ?? 'Channel management')}</span>
       </div>
       <div class="live-channels-window-content">
         <div class="live-channels-window-toolbar">
-          <button type="button" class="live-news-manage-restore-defaults" id="liveChannelsRestoreBtn" style="display: none;">${t('components.liveNews.restoreDefaults') ?? 'Restore default channels'}</button>
+          <button type="button" class="live-news-manage-restore-defaults" id="liveChannelsRestoreBtn" style="display: none;">${escapeHtml(t('components.liveNews.restoreDefaults') ?? 'Restore default channels')}</button>
         </div>
         <div class="live-news-manage-list" id="liveChannelsList"></div>
         <div class="live-news-manage-add-section">
-          <span class="live-news-manage-add-title">${t('components.liveNews.addChannel') ?? 'Add channel'}</span>
+          <span class="live-news-manage-add-title">${escapeHtml(t('components.liveNews.addChannel') ?? 'Add channel')}</span>
           <div class="live-news-manage-add">
             <div class="live-news-manage-add-field">
-              <label class="live-news-manage-add-label" for="liveChannelsHandle">${t('components.liveNews.youtubeHandle') ?? 'YouTube handle (e.g. @Channel)'}</label>
+              <label class="live-news-manage-add-label" for="liveChannelsHandle">${escapeHtml(t('components.liveNews.youtubeHandle') ?? 'YouTube handle (e.g. @Channel)')}</label>
               <input type="text" class="live-news-manage-handle" id="liveChannelsHandle" placeholder="@Channel" />
             </div>
             <div class="live-news-manage-add-field">
-              <label class="live-news-manage-add-label" for="liveChannelsName">${t('components.liveNews.displayName') ?? 'Display name (optional)'}</label>
+              <label class="live-news-manage-add-label" for="liveChannelsName">${escapeHtml(t('components.liveNews.displayName') ?? 'Display name (optional)')}</label>
               <input type="text" class="live-news-manage-name" id="liveChannelsName" placeholder="" />
             </div>
-            <button type="button" class="live-news-manage-add-btn" id="liveChannelsAddBtn">${t('components.liveNews.addChannel') ?? 'Add channel'}</button>
+            <button type="button" class="live-news-manage-add-btn" id="liveChannelsAddBtn">${escapeHtml(t('components.liveNews.addChannel') ?? 'Add channel')}</button>
           </div>
         </div>
       </div>

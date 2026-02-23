@@ -122,9 +122,13 @@ export function loadChannelsFromStorage(): LiveChannel[] {
 export function saveChannelsToStorage(channels: LiveChannel[]): void {
   const order = channels.map((c) => c.id);
   const custom = channels.filter((c) => !BUILTIN_IDS.has(c.id));
+  const builtinNames = new Map<string, string>();
+  for (const c of [...FULL_LIVE_CHANNELS, ...TECH_LIVE_CHANNELS]) builtinNames.set(c.id, c.name);
   const displayNameOverrides: Record<string, string> = {};
   for (const c of channels) {
-    displayNameOverrides[c.id] = c.name;
+    if (builtinNames.has(c.id) && c.name !== builtinNames.get(c.id)) {
+      displayNameOverrides[c.id] = c.name;
+    }
   }
   saveToStorage(STORAGE_KEYS.liveChannels, { order, custom, displayNameOverrides });
 }
@@ -167,6 +171,7 @@ export class LiveNewsPanel extends Panel {
     this.playerElementId = `live-news-player-${Date.now()}`;
     this.element.classList.add('panel-wide');
     this.channels = loadChannelsFromStorage();
+    if (this.channels.length === 0) this.channels = getDefaultLiveChannels();
     this.activeChannel = this.channels[0]!;
     this.createLiveButton();
     this.createMuteButton();
@@ -436,8 +441,9 @@ export class LiveNewsPanel extends Panel {
         }).catch(() => {});
         return;
       }
-      const url = `${window.location.origin}${window.location.pathname}${window.location.search ? window.location.search + '&' : '?'}live-channels=1`;
-      window.open(url, 'worldmonitor-live-channels', 'width=440,height=560,scrollbars=yes');
+      const url = new URL(window.location.href);
+      url.searchParams.set('live-channels', '1');
+      window.open(url.toString(), 'worldmonitor-live-channels', 'width=440,height=560,scrollbars=yes');
     });
     toolbar.appendChild(openBtn);
   }
@@ -827,9 +833,10 @@ export class LiveNewsPanel extends Panel {
   /** Reload channel list from storage (e.g. after edit in separate channel management window). */
   public refreshChannelsFromStorage(): void {
     this.channels = loadChannelsFromStorage();
+    if (this.channels.length === 0) this.channels = getDefaultLiveChannels();
     if (!this.channels.some((c) => c.id === this.activeChannel.id)) {
       this.activeChannel = this.channels[0]!;
-      if (this.activeChannel) void this.switchChannel(this.activeChannel);
+      void this.switchChannel(this.activeChannel);
     }
     this.refreshChannelSwitcher();
   }

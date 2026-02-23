@@ -1168,11 +1168,8 @@
       "displayName": "Nombre para mostrar (opcional)",
       "openPanelSettings": "Configuración de visualización del panel",
       "channelSettings": "Configuración del canal",
-      "edit": "Editar",
       "save": "Guardar",
       "cancel": "Cancelar",
-      "editMode": "Modo de edición",
-      "done": "Listo",
       "confirmDelete": "Eliminar este canal?",
       "confirmTitle": "Confirmar",
       "restoreDefaults": "Restaurar canales predeterminados"
@@ -1764,7 +1761,7 @@
     "noData": "No hay datos disponibles",
     "updated": "Actualizado ahora",
     "ago": "hace {{time}}",
-    "retrying": "Reintentando…",
+    "retrying": "Reintentando...",
     "failedToLoad": "Error al cargar los datos",
     "noDataShort": "Sin datos",
     "noDataAvailable": "No hay datos disponibles",
@@ -1812,7 +1809,6 @@
     "close": "Cerrar",
     "currentVariant": "(actual)",
     "retry": "Retry",
-    "retrying": "Reintentando...",
     "refresh": "Refresh"
   }
 }

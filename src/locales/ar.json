@@ -1168,11 +1168,8 @@
       "displayName": "اسم العرض (اختياري)",
       "openPanelSettings": "إعدادات عرض اللوحة",
       "channelSettings": "إعدادات القناة",
-      "edit": "تحرير",
       "save": "حفظ",
       "cancel": "إلغاء",
-      "editMode": "وضع التحرير",
-      "done": "تم",
       "confirmDelete": "حذف هذه القناة؟",
       "confirmTitle": "تأكيد",
       "restoreDefaults": "استعادة القنوات الافتراضية"
@@ -1765,7 +1762,7 @@
     "noDataAvailable": "لا تتوفر بيانات",
     "updated": "تم التحديث للتو",
     "ago": "منذ {{time}}",
-    "retrying": "جارٍ إعادة المحاولة…",
+    "retrying": "جاري إعادة المحاولة...",
     "failedToLoad": "فشل تحميل البيانات",
     "noDataShort": "لا بيانات",
     "upstreamUnavailable": "واجهة API المصدر غير متاحة — ستتم إعادة المحاولة تلقائياً",
@@ -1812,7 +1809,6 @@
     "close": "إغلاق",
     "currentVariant": "(الحالي)",
     "retry": "Retry",
-    "retrying": "جاري إعادة المحاولة...",
     "refresh": "Refresh"
   }
 }

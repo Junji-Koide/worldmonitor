@@ -1145,11 +1145,8 @@
       "displayName": "Tên hiển thị (tùy chọn)",
       "openPanelSettings": "Cài đặt hiển thị bảng",
       "channelSettings": "Cài đặt kênh",
-      "edit": "Chỉnh sửa",
       "save": "Lưu",
       "cancel": "Hủy",
-      "editMode": "Chế độ chỉnh sửa",
-      "done": "Xong",
       "confirmDelete": "Xóa kênh này?",
       "confirmTitle": "Xác nhận",
       "restoreDefaults": "Khôi phục kênh mặc định"
@@ -1742,7 +1739,7 @@
     "noDataAvailable": "Không có dữ liệu",
     "updated": "Vừa cập nhật",
     "ago": "{{time}} trước",
-    "retrying": "Đang thử lại…",
+    "retrying": "Đang thử lại...",
     "failedToLoad": "Không thể tải dữ liệu",
     "noDataShort": "Không có dữ liệu",
     "upstreamUnavailable": "API nguồn không khả dụng — sẽ tự động thử lại",
@@ -1789,7 +1786,6 @@
     "close": "Đóng",
     "currentVariant": "(hiện tại)",
     "retry": "Thử lại",
-    "retrying": "Đang thử lại...",
     "refresh": "Làm mới"
   }
 }

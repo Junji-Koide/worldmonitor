@@ -1282,33 +1282,6 @@ canvas,
   color: var(--text);
 }
 
-/* Live News – Manage (legacy / in-window manage panel) */
-.live-news-manage-wrap {
-  padding: 0 8px 8px;
-  background: var(--darken-heavy);
-  border-bottom: 1px solid var(--border);
-}
-.live-news-manage-btn {
-  padding: 4px 8px;
-  font-size: 10px;
-  color: var(--text-dim);
-  background: transparent;
-  border: 1px solid var(--border);
-  cursor: pointer;
-  margin-bottom: 6px;
-}
-.live-news-manage-btn:hover {
-  color: var(--text);
-  border-color: var(--text-dim);
-}
-.live-news-manage-panel {
-  display: none;
-  flex-direction: column;
-  gap: 8px;
-}
-.live-news-manage-panel.open {
-  display: flex;
-}
 /* Channel management list: same layout as LIVE panel channel switcher */
 .live-news-manage-list {
   display: flex;

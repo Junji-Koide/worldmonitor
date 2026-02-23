@@ -1186,11 +1186,8 @@
       "displayName": "Display name (optional)",
       "openPanelSettings": "Panel display settings",
       "channelSettings": "Channel Settings",
-      "edit": "Edit",
       "save": "Save",
       "cancel": "Cancel",
-      "editMode": "Edit mode",
-      "done": "Done",
       "confirmDelete": "Delete this channel?",
       "confirmTitle": "Confirm",
       "restoreDefaults": "Restore default channels"

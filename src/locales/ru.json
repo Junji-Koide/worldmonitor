@@ -1168,11 +1168,8 @@
       "displayName": "Отображаемое имя (необяз.)",
       "openPanelSettings": "Настройки отображения панели",
       "channelSettings": "Настройки канала",
-      "edit": "Изменить",
       "save": "Сохранить",
       "cancel": "Отмена",
-      "editMode": "Режим правки",
-      "done": "Готово",
       "confirmDelete": "Удалить этот канал?",
       "confirmTitle": "Подтверждение",
       "restoreDefaults": "Восстановить каналы по умолчанию"
@@ -1765,7 +1762,7 @@
     "noDataAvailable": "Данные недоступны",
     "updated": "Обновлено только что",
     "ago": "{{time}} назад",
-    "retrying": "Повторная попытка…",
+    "retrying": "Повторная попытка...",
     "failedToLoad": "Не удалось загрузить данные",
     "noDataShort": "Нет данных",
     "upstreamUnavailable": "Внешний API недоступен — автоматическая повторная попытка",
@@ -1812,7 +1809,6 @@
     "close": "Закрыть",
     "currentVariant": "(текущий)",
     "retry": "Retry",
-    "retrying": "Повторная попытка...",
     "refresh": "Refresh"
   }
 }

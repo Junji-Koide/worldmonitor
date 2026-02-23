@@ -1076,11 +1076,8 @@
       "displayName": "Weergavenaam (optioneel)",
       "openPanelSettings": "Paneelweergave-instellingen",
       "channelSettings": "Kanaalinstellingen",
-      "edit": "Bewerken",
       "save": "Opslaan",
       "cancel": "Annuleren",
-      "editMode": "Bewerkingsmodus",
-      "done": "Klaar",
       "confirmDelete": "Dit kanaal verwijderen?",
       "confirmTitle": "Bevestigen",
       "restoreDefaults": "Standaardkanalen herstellen"
@@ -1670,7 +1667,7 @@
     "loading": "Laden...",
     "error": "Er is een fout opgetreden",
     "updated": "Bijgewerkt: {{time}}",
-    "retrying": "Opnieuw proberen…",
+    "retrying": "Opnieuw proberen...",
     "failedToLoad": "Laden van gegevens mislukt",
     "noDataShort": "Geen gegevens",
     "noDataAvailable": "Geen gegevens beschikbaar",
@@ -1720,7 +1717,6 @@
     "close": "Sluiten",
     "currentVariant": "(huidig)",
     "retry": "Retry",
-    "retrying": "Opnieuw proberen...",
     "refresh": "Refresh"
   },
   "header": {

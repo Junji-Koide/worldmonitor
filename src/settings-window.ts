@@ -6,6 +6,7 @@ import type { PanelConfig } from '@/types';
 import { DEFAULT_PANELS, STORAGE_KEYS } from '@/config';
 import { loadFromStorage, saveToStorage, isMobileDevice } from '@/utils';
 import { t } from '@/services/i18n';
+import { escapeHtml } from '@/utils/sanitize';
 import { isDesktopRuntime } from '@/services/runtime';
 
 const INTEL_FINDINGS_KEY = 'worldmonitor-intel-findings';
@@ -98,8 +99,8 @@ export function initSettingsWindow(): void {
     <div class="settings-window-shell">
       <div class="settings-window-header">
         <div class="settings-window-header-text">
-          <span class="settings-window-title">${t('header.settings')}</span>
-          <p class="settings-window-caption">${t('header.panelDisplayCaption')}</p>
+          <span class="settings-window-title">${escapeHtml(t('header.settings'))}</span>
+          <p class="settings-window-caption">${escapeHtml(t('header.panelDisplayCaption'))}</p>
         </div>
         <button type="button" class="modal-close" id="settingsWindowClose">×</button>
       </div>

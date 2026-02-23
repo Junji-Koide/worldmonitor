@@ -1145,11 +1145,8 @@
       "displayName": "ชื่อที่แสดง (ไม่บังคับ)",
       "openPanelSettings": "การตั้งค่าการแสดงผลแผง",
       "channelSettings": "การตั้งค่าช่อง",
-      "edit": "แก้ไข",
       "save": "บันทึก",
       "cancel": "ยกเลิก",
-      "editMode": "โหมดแก้ไข",
-      "done": "เสร็จสิ้น",
       "confirmDelete": "ลบช่องนี้หรือไม่?",
       "confirmTitle": "ยืนยัน",
       "restoreDefaults": "คืนค่าช่องเริ่มต้น"
@@ -1742,7 +1739,7 @@
     "noDataAvailable": "ไม่มีข้อมูล",
     "updated": "อัปเดตเมื่อสักครู่",
     "ago": "{{time}} ที่แล้ว",
-    "retrying": "กำลังลองใหม่…",
+    "retrying": "กำลังลองใหม่...",
     "failedToLoad": "โหลดข้อมูลไม่สำเร็จ",
     "noDataShort": "ไม่มีข้อมูล",
     "upstreamUnavailable": "API ต้นทางไม่พร้อมใช้งาน — จะลองใหม่อัตโนมัติ",
@@ -1789,7 +1786,6 @@
     "close": "ปิด",
     "currentVariant": "(ปัจจุบัน)",
     "retry": "ลองใหม่",
-    "retrying": "กำลังลองใหม่...",
     "refresh": "รีเฟรช"
   }
 }

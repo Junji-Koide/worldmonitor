@@ -1168,11 +1168,8 @@
       "displayName": "Nom d'affichage (optionnel)",
       "openPanelSettings": "Paramètres d'affichage du panneau",
       "channelSettings": "Paramètres de la chaîne",
-      "edit": "Modifier",
       "save": "Enregistrer",
       "cancel": "Annuler",
-      "editMode": "Mode édition",
-      "done": "Terminé",
       "confirmDelete": "Supprimer cette chaîne ?",
       "confirmTitle": "Confirmer",
       "restoreDefaults": "Restaurer les chaînes par défaut"
@@ -1764,7 +1761,7 @@
     "noData": "Aucune donnée disponible",
     "updated": "Mis à jour à l'instant",
     "ago": "il y a {{time}}",
-    "retrying": "Nouvelle tentative…",
+    "retrying": "Nouvelle tentative...",
     "failedToLoad": "Échec du chargement des données",
     "noDataShort": "Aucune donnée",
     "upstreamUnavailable": "API source indisponible — nouvelle tentative automatique",
@@ -1812,7 +1809,6 @@
     "close": "Fermer",
     "currentVariant": "(actuel)",
     "retry": "Retry",
-    "retrying": "Nouvelle tentative...",
     "refresh": "Refresh"
   }
 }

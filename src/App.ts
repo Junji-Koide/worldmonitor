@@ -2637,10 +2637,9 @@ export class App {
       }
     });
 
-    // Settings: open in a separate window
+    // Settings modal
     document.getElementById('settingsBtn')?.addEventListener('click', () => {
-      const settingsUrl = `${window.location.origin}${window.location.pathname}${window.location.search ? window.location.search + '&' : '?'}settings=1`;
-      window.open(settingsUrl, 'worldmonitor-settings', 'width=420,height=640,scrollbars=yes');
+      document.getElementById('settingsModal')?.classList.add('active');
     });
 
     // Sync panel state when settings are changed in the separate settings window
@@ -2657,8 +2656,8 @@ export class App {
       }
       if (e.key === STORAGE_KEYS.liveChannels && e.newValue) {
         const panel = this.panels['live-news'];
-        if (panel && typeof (panel as { refreshChannelsFromStorage?: () => void }).refreshChannelsFromStorage === 'function') {
-          (panel as { refreshChannelsFromStorage: () => void }).refreshChannelsFromStorage();
+        if (panel && typeof (panel as unknown as { refreshChannelsFromStorage?: () => void }).refreshChannelsFromStorage === 'function') {
+          (panel as unknown as { refreshChannelsFromStorage: () => void }).refreshChannelsFromStorage();
         }
       }
     });

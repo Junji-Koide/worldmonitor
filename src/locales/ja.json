@@ -1169,11 +1169,8 @@
       "displayName": "表示名（任意）",
       "openPanelSettings": "表示パネル設定",
       "channelSettings": "チャンネル設定",
-      "edit": "編集",
       "save": "保存",
       "cancel": "キャンセル",
-      "editMode": "編集モード",
-      "done": "完了",
       "confirmDelete": "このチャンネルを削除しますか？",
       "confirmTitle": "確認",
       "restoreDefaults": "デフォルトのチャンネルを復元"
@@ -1766,7 +1763,7 @@
     "noDataAvailable": "データなし",
     "updated": "たった今更新",
     "ago": "{{time}}前",
-    "retrying": "再試行中…",
+    "retrying": "再試行中...",
     "failedToLoad": "データの読み込みに失敗",
     "noDataShort": "データなし",
     "upstreamUnavailable": "上流APIが利用不可 — 自動リトライ予定",
@@ -1813,7 +1810,6 @@
     "close": "閉じる",
     "currentVariant": "（現在）",
     "retry": "Retry",
-    "retrying": "再試行中...",
     "refresh": "Refresh"
   }
 }

@@ -1168,11 +1168,8 @@
       "displayName": "Görünen ad (isteğe bağlı)",
       "openPanelSettings": "Panel görüntü ayarları",
       "channelSettings": "Kanal ayarları",
-      "edit": "Düzenle",
       "save": "Kaydet",
       "cancel": "İptal",
-      "editMode": "Düzenleme modu",
-      "done": "Tamamla",
       "confirmDelete": "Bu kanal silinsin mi?",
       "confirmTitle": "Onayla",
       "restoreDefaults": "Varsayılan kanalları geri yükle"
@@ -1765,7 +1762,7 @@
     "noDataAvailable": "Veri mevcut degil",
     "updated": "Az once guncellendi",
     "ago": "{{time}} once",
-    "retrying": "Yeniden deneniyor…",
+    "retrying": "Tekrar deneniyor...",
     "failedToLoad": "Veri yuklenemedi",
     "noDataShort": "Veri yok",
     "upstreamUnavailable": "Ust kaynak API'si kullanilamiyor — otomatik yeniden denenecek",
@@ -1812,7 +1809,6 @@
     "close": "Kapat",
     "currentVariant": "(mevcut)",
     "retry": "Retry",
-    "retrying": "Tekrar deneniyor...",
     "refresh": "Refresh"
   }
 }
