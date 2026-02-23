@@ -82,11 +82,12 @@ Plans:
   2. A positive event Deck.gl layer shows news stories plotted at their geolocated positions
   3. A live kindness layer shows animated green pulses representing acts of kindness, donations, and volunteer events worldwide
   4. Kindness data combines estimated baseline pulses (weighted by population density) with real events from GoFundMe trending, Change.org wins, and similar sources
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 04-01: TBD
-- [ ] 04-02: TBD
+- [ ] 04-01-PLAN.md -- MapLayers type extension, variant configs, happy layer toggles & legend (MAP-01)
+- [ ] 04-02-PLAN.md -- Positive events geocoding pipeline + Deck.gl layer with green/gold markers (MAP-01, MAP-02)
+- [ ] 04-03-PLAN.md -- Kindness data pipeline (baseline + curated) + Deck.gl animated green pulse layer (KIND-01, KIND-02)
 
 ### Phase 5: Humanity Data Panels
 **Goal**: Users can watch live ticking counters of positive global metrics and explore long-term charts proving humanity is getting better
@@ -179,7 +180,7 @@ Note: Phases 4, 5, 6, 7 can partially parallelize after Phase 2 completes (they 
 | 1. Variant Shell & Visual Foundation | 3/3 | Complete | 2026-02-22 |
 | 2. Curated Content Pipeline | 3/3 | Complete    | 2026-02-22 |
 | 3. Positive News Feed & Quality Pipeline | 0/3 | Complete    | 2026-02-23 |
-| 4. Global Map & Positive Events | 0/2 | Not started | - |
+| 4. Global Map & Positive Events | 0/3 | Not started | - |
 | 5. Humanity Data Panels | 0/3 | Not started | - |
 | 6. Content Spotlight Panels | 0/3 | Not started | - |
 | 7. Conservation & Energy Trackers | 0/2 | Not started | - |
