@@ -48,3 +48,41 @@ export async function setCachedJson(key: string, value: unknown, ttlSeconds: num
     });
   } catch { /* best-effort */ }
 }
+
+/**
+ * In-flight request coalescing map.
+ * When multiple concurrent requests hit the same cache key during a miss,
+ * only the first triggers the upstream fetch — others await the same promise.
+ * This eliminates duplicate upstream API calls within a single Edge Function invocation.
+ */
+const inflight = new Map<string, Promise<unknown>>();
+
+/**
+ * Check cache, then fetch with coalescing on miss.
+ * Concurrent callers for the same key share a single upstream fetch + Redis write.
+ */
+export async function cachedFetchJson<T>(
+  key: string,
+  ttlSeconds: number,
+  fetcher: () => Promise<T>,
+): Promise<T | null> {
+  const cached = await getCachedJson(key);
+  if (cached !== null) return cached as T;
+
+  const existing = inflight.get(key);
+  if (existing) return existing as Promise<T>;
+
+  const promise = fetcher()
+    .then(async (result) => {
+      if (result != null) {
+        await setCachedJson(key, result, ttlSeconds);
+      }
+      return result;
+    })
+    .finally(() => {
+      inflight.delete(key);
+    });
+
+  inflight.set(key, promise);
+  return promise;
+}
