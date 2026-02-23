@@ -883,7 +883,10 @@ fn main() {
                         let _ = w.set_focus();
                     }
                 }
-                // Raise settings window when main window gains focus so it doesn't hide behind
+                // Only macOS needs explicit re-raising to keep settings above the main window.
+                // On Windows, focusing the settings window here can trigger rapid focus churn
+                // between windows and present as a UI hang.
+                #[cfg(target_os = "macos")]
                 RunEvent::WindowEvent {
                     label,
                     event: WindowEvent::Focused(true),
