@@ -462,8 +462,8 @@ const HAPPY_MAP_LAYERS: MapLayers = {
   positiveEvents: true,
   kindness: true,
   happiness: true,
-  speciesRecovery: false,
-  renewableInstallations: false,
+  speciesRecovery: true,
+  renewableInstallations: true,
 };
 
 const HAPPY_MOBILE_MAP_LAYERS: MapLayers = {
@@ -509,8 +509,8 @@ const HAPPY_MOBILE_MAP_LAYERS: MapLayers = {
   positiveEvents: true,
   kindness: true,
   happiness: true,
-  speciesRecovery: false,
-  renewableInstallations: false,
+  speciesRecovery: true,
+  renewableInstallations: true,
 };
 
 // ============================================
