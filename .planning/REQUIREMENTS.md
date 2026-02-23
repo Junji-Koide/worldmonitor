@@ -80,9 +80,9 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Renewable Energy Growth Tracker Panel
 
-- [ ] **ENERGY-01**: Renewable energy capacity visualization showing solar/wind installations growing, coal plants closing
-- [ ] **ENERGY-02**: Animated gauge showing global renewable percentage climbing plus regional breakdown
-- [ ] **ENERGY-03**: Data from IEA Renewable Energy Progress Tracker and existing EIA API integration
+- [x] **ENERGY-01**: Renewable energy capacity visualization showing solar/wind installations growing, coal plants closing
+- [x] **ENERGY-02**: Animated gauge showing global renewable percentage climbing plus regional breakdown
+- [x] **ENERGY-03**: Data from IEA Renewable Energy Progress Tracker and existing EIA API integration
 
 ### Live Kindness Map
 
@@ -170,9 +170,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | SPECIES-01 | Phase 7 | Pending |
 | SPECIES-02 | Phase 7 | Pending |
 | SPECIES-03 | Phase 7 | Pending |
-| ENERGY-01 | Phase 7 | Pending |
-| ENERGY-02 | Phase 7 | Pending |
-| ENERGY-03 | Phase 7 | Pending |
+| ENERGY-01 | Phase 7 | Complete |
+| ENERGY-02 | Phase 7 | Complete |
+| ENERGY-03 | Phase 7 | Complete |
 | KIND-01 | Phase 4 | Complete |
 | KIND-02 | Phase 4 | Complete |
 | SHARE-01 | Phase 9 | Pending |
