@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-02-22)
 
 **Core value:** Every piece of content on the dashboard makes the viewer feel genuinely better about humanity
-**Current focus:** Phase 3 complete - Positive News Feed & Quality Pipeline (3/3 plans done)
+**Current focus:** Phase 4 in progress - Global Map & Positive Events (1/3 plans done)
 
 ## Current Position
 
-Phase: 3 of 9 (Positive News Feed & Quality Pipeline)
-Plan: 3 of 3 in current phase (03-03 complete -- phase complete)
-Status: Phase Complete
-Last activity: 2026-02-23 -- Completed 03-03-PLAN.md (Quality Pipeline Wiring)
+Phase: 4 of 9 (Global Map & Positive Events)
+Plan: 1 of 3 in current phase (04-01 complete)
+Status: In Progress
+Last activity: 2026-02-23 -- Completed 04-01-PLAN.md (Map Layer Config & Happy Variant Toggles)
 
-Progress: [#########.] 89%
+Progress: [#########.] 91%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 9
-- Average duration: 16 min
-- Total execution time: 2.3 hours
+- Total plans completed: 10
+- Average duration: 15 min
+- Total execution time: 2.4 hours
 
 **By Phase:**
 
@@ -30,13 +30,14 @@ Progress: [#########.] 89%
 | 01 | 3 | 120 min | 40 min |
 | 02 | 3 | 7 min | 2 min |
 | 03 | 3 | 9 min | 3 min |
+| 04 | 1 | 4 min | 4 min |
 
 **Recent Trend:**
-- Last 5 plans: 3m, 1m, 3m, 3m, 3m
-- Trend: Phase 3 complete -- consistent 3min/plan pace
+- Last 5 plans: 1m, 3m, 3m, 3m, 4m
+- Trend: Phase 4 started -- consistent pace
 
 *Updated after each plan completion*
-| Phase 03 P03 | 3 | 2 tasks | 3 files |
+| Phase 04 P01 | 4 | 2 tasks | 9 files |
 
 ## Accumulated Context
 
@@ -75,6 +76,8 @@ Recent decisions affecting current work:
 - [03-03]: GdeltArticle field mapping: article.date (not seenDate), article.image (not socialImage) -- adapted to actual API shape.
 - [03-03]: Two-phase render: curated RSS renders immediately, GDELT+ML supplements async -- never blocks UX on ML.
 - [03-03]: happyAllItems accumulator: reset at loadNews() start, concat in loadNewsCategory(), consumed in pipeline.
+- [04-01]: Happy variant layer toggles use hardcoded English labels (no i18n keys yet, consistent with Phase 3 pattern).
+- [04-01]: Legend colors: green for positive, gold for breakthrough, light green for kindness, orange for natural (matches happy theme warm palette).
 
 ### Pending Todos
 
@@ -89,5 +92,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-23
-Stopped at: Completed 03-03-PLAN.md (Quality Pipeline Wiring) -- Phase 3 complete (3/3 plans done)
-Resume file: .planning/phases/03-positive-news-feed-quality-pipeline/03-03-SUMMARY.md
+Stopped at: Completed 04-01-PLAN.md (Map Layer Config & Happy Variant Toggles)
+Resume file: .planning/phases/04-global-map-positive-events/04-01-SUMMARY.md

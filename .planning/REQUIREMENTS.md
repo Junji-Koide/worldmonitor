@@ -38,7 +38,7 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Global Map & Positive Events
 
-- [ ] **MAP-01**: Interactive map displaying geocoded positive events with warm-colored markers (green/gold pulses instead of red threat markers)
+- [x] **MAP-01**: Interactive map displaying geocoded positive events with warm-colored markers (green/gold pulses instead of red threat markers)
 - [ ] **MAP-02**: Positive event layer showing news stories geolocated on the map
 - [ ] **MAP-03**: World happiness heatmap choropleth layer (World Happiness Report data, green = happy)
 - [ ] **MAP-04**: Species recovery zones as map overlay (IUCN data, wildlife comeback locations)
@@ -149,7 +149,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | NEWS-01 | Phase 3 | Complete |
 | NEWS-02 | Phase 3 | Complete |
 | NEWS-03 | Phase 3 | Complete |
-| MAP-01 | Phase 4 | Pending |
+| MAP-01 | Phase 4 | Complete |
 | MAP-02 | Phase 4 | Pending |
 | MAP-03 | Phase 8 | Pending |
 | MAP-04 | Phase 8 | Pending |
