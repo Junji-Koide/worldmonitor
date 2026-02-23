@@ -346,6 +346,13 @@ async function fetchTechEvents(req: ListTechEventsRequest): Promise<ListTechEven
   };
 }
 
+function applyLimit(res: ListTechEventsResponse, limit: number): ListTechEventsResponse {
+  const events = res.events.slice(0, limit);
+  const conferences = events.filter(e => e.type === 'conference');
+  const mappableCount = conferences.filter(e => e.coords && !e.coords.virtual).length;
+  return { ...res, events, count: events.length, conferenceCount: conferences.length, mappableCount };
+}
+
 // ---------- Handler ----------
 
 export async function listTechEvents(
@@ -357,8 +364,7 @@ export async function listTechEvents(
     const cached = (await getCachedJson(cacheKey)) as ListTechEventsResponse | null;
     if (cached?.events?.length) {
       if (req.limit > 0 && cached.events.length > req.limit) {
-        const sliced = cached.events.slice(0, req.limit);
-        return { ...cached, events: sliced, count: sliced.length };
+        return applyLimit(cached, req.limit);
       }
       return cached;
     }
@@ -368,8 +374,7 @@ export async function listTechEvents(
       setCachedJson(cacheKey, result, REDIS_CACHE_TTL).catch(() => {});
     }
     if (req.limit > 0 && result.events.length > req.limit) {
-      const sliced = result.events.slice(0, req.limit);
-      return { ...result, events: sliced, count: sliced.length };
+      return applyLimit(result, req.limit);
     }
     return result;
   } catch (error) {
