@@ -108,6 +108,8 @@ import { RenewableEnergyPanel } from '@/components/RenewableEnergyPanel';
 import { fetchProgressData } from '@/services/progress-data';
 import { fetchConservationWins } from '@/services/conservation-data';
 import { fetchRenewableEnergyData } from '@/services/renewable-energy-data';
+import { fetchHappinessScores } from '@/services/happiness-data';
+import { fetchRenewableInstallations } from '@/services/renewable-installations';
 import { filterBySentiment } from '@/services/sentiment-gate';
 import { fetchAllPositiveTopicIntelligence } from '@/services/gdelt-intel';
 import { fetchPositiveGeoEvents, geocodePositiveNewsItems } from '@/services/positive-events-geo';
@@ -3276,6 +3278,21 @@ export class App {
         name: 'renewable',
         task: runGuarded('renewable', () => this.loadRenewableData()),
       });
+      // Phase 8: Map overlay data (happiness choropleth + renewable installation markers)
+      tasks.push({
+        name: 'happinessMap',
+        task: runGuarded('happinessMap', async () => {
+          const data = await fetchHappinessScores();
+          this.map?.setHappinessScores(data);
+        }),
+      });
+      tasks.push({
+        name: 'renewableMap',
+        task: runGuarded('renewableMap', async () => {
+          const installations = await fetchRenewableInstallations();
+          this.map?.setRenewableInstallations(installations);
+        }),
+      });
     }
     if (SITE_VARIANT !== 'happy' && this.mapLayers.weather) tasks.push({ name: 'weather', task: runGuarded('weather', () => this.loadWeatherAlerts()) });
     if (SITE_VARIANT !== 'happy' && this.mapLayers.ais) tasks.push({ name: 'ais', task: runGuarded('ais', () => this.loadAisSignals()) });
@@ -3800,6 +3817,8 @@ export class App {
   private async loadSpeciesData(): Promise<void> {
     const species = await fetchConservationWins();
     this.speciesPanel?.setData(species);
+    // Phase 8: also send to map for species recovery zone overlay
+    this.map?.setSpeciesRecoveryZones(species);
   }
 
   private async loadRenewableData(): Promise<void> {

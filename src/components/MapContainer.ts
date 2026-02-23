@@ -33,6 +33,9 @@ import type { ClimateAnomaly } from '@/services/climate';
 import type { WeatherAlert } from '@/services/weather';
 import type { PositiveGeoEvent } from '@/services/positive-events-geo';
 import type { KindnessPoint } from '@/services/kindness-data';
+import type { HappinessData } from '@/services/happiness-data';
+import type { SpeciesRecovery } from '@/services/conservation-data';
+import type { RenewableInstallation } from '@/services/renewable-installations';
 
 export type TimeRange = '1h' | '6h' | '24h' | '48h' | '7d' | 'all';
 export type MapView = 'global' | 'america' | 'mena' | 'eu' | 'asia' | 'latam' | 'africa' | 'oceania';
@@ -347,6 +350,27 @@ export class MapContainer {
       this.deckGLMap?.setKindnessData(points);
     }
     // SVG map does not support kindness layer
+  }
+
+  public setHappinessScores(data: HappinessData): void {
+    if (this.useDeckGL) {
+      this.deckGLMap?.setHappinessScores(data);
+    }
+    // SVG map does not support choropleth overlay
+  }
+
+  public setSpeciesRecoveryZones(species: SpeciesRecovery[]): void {
+    if (this.useDeckGL) {
+      this.deckGLMap?.setSpeciesRecoveryZones(species);
+    }
+    // SVG map does not support species recovery layer
+  }
+
+  public setRenewableInstallations(installations: RenewableInstallation[]): void {
+    if (this.useDeckGL) {
+      this.deckGLMap?.setRenewableInstallations(installations);
+    }
+    // SVG map does not support renewable installations layer
   }
 
   public updateHotspotActivity(news: NewsItem[]): void {
