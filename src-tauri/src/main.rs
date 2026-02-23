@@ -883,6 +883,19 @@ fn main() {
             // SAFETY: called before any threads are spawned (Tauri hasn't started yet).
             unsafe { env::set_var("WEBKIT_DISABLE_DMABUF_RENDERER", "1") };
         }
+
+        // Work around GLib version mismatch when running as an AppImage on newer
+        // distros (e.g. Ubuntu 25.10+).  The AppImage bundles GLib from the build
+        // system (currently Ubuntu 24.04, GLib 2.80).  When host GIO modules such
+        // as GVFS's libgvfsdbus.so are compiled against a newer GLib they reference
+        // symbols that do not exist in the bundled copy, producing:
+        //   "undefined symbol: g_task_set_static_name"
+        // Setting GIO_MODULE_DIR to an empty string tells GIO to skip module
+        // scanning entirely.  GVFS features (network mounts, trash, MTP) are not
+        // used by this application, so disabling them is safe.
+        if env::var_os("APPIMAGE").is_some() && env::var_os("GIO_MODULE_DIR").is_none() {
+            unsafe { env::set_var("GIO_MODULE_DIR", "") };
+        }
     }
 
     tauri::Builder::default()
