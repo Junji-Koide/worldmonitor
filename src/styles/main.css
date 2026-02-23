@@ -55,7 +55,7 @@
   --map-stroke: #0f5040;
 
   /* Font stack */
-  --font-body: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
+  --font-body: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', 'DejaVu Sans Mono', 'Liberation Mono', monospace;
 }
 
 [dir="rtl"] {

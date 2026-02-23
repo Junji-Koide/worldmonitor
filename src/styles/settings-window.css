@@ -231,7 +231,7 @@
   color: var(--settings-text);
   padding: 8px 12px;
   font-size: 13px;
-  font-family: 'SF Mono', 'Cascadia Code', 'Fira Code', monospace;
+  font-family: 'SF Mono', 'Cascadia Code', 'Fira Code', 'DejaVu Sans Mono', 'Liberation Mono', monospace;
   transition: border-color 0.15s;
 }
 
@@ -253,7 +253,7 @@
   color: var(--settings-text);
   padding: 8px 12px;
   font-size: 13px;
-  font-family: 'SF Mono', 'Cascadia Code', 'Fira Code', monospace;
+  font-family: 'SF Mono', 'Cascadia Code', 'Fira Code', 'DejaVu Sans Mono', 'Liberation Mono', monospace;
   width: 100%;
   cursor: pointer;
   transition: border-color 0.15s;
@@ -561,7 +561,7 @@
 .diag-table {
   width: 100%;
   border-collapse: collapse;
-  font-family: 'SF Mono', 'Cascadia Code', 'Fira Code', monospace;
+  font-family: 'SF Mono', 'Cascadia Code', 'Fira Code', 'DejaVu Sans Mono', 'Liberation Mono', monospace;
   font-size: 12px;
 }
 
@@ -707,7 +707,7 @@ tr.diag-err td { color: var(--settings-red); }
   color: var(--settings-text);
   padding: 8px 36px 8px 12px;
   font-size: 13px;
-  font-family: 'SF Mono', 'Cascadia Code', 'Fira Code', monospace;
+  font-family: 'SF Mono', 'Cascadia Code', 'Fira Code', 'DejaVu Sans Mono', 'Liberation Mono', monospace;
   transition: border-color 0.15s;
   box-sizing: border-box;
 }
