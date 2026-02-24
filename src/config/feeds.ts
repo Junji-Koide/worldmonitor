@@ -4,14 +4,9 @@ import { SITE_VARIANT } from './variant';
 // Helper to create RSS proxy URL (Vercel)
 const rss = (url: string) => `/api/rss-proxy?url=${encodeURIComponent(url)}`;
 
-// Railway proxy for feeds blocked by Vercel IPs (UN News, CISA, etc.)
-// Reuses VITE_WS_RELAY_URL which is already configured for AIS/OpenSky
-const wsRelayUrl = import.meta.env.VITE_WS_RELAY_URL || '';
-const railwayBaseUrl = wsRelayUrl
-  ? wsRelayUrl.replace('wss://', 'https://').replace('ws://', 'http://').replace(/\/$/, '')
-  : '';
-const railwayRss = (url: string) =>
-  railwayBaseUrl ? `${railwayBaseUrl}/rss?url=${encodeURIComponent(url)}` : rss(url);
+// Keep dedicated alias for feeds historically fetched through Railway.
+// `rss-proxy` now handles secure server-side fallback.
+const railwayRss = (url: string) => rss(url);
 
 // Source tier system for prioritization (lower = more authoritative)
 // Tier 1: Wire services - fastest, most reliable breaking news
@@ -439,9 +434,16 @@ export function isStateAffiliatedSource(sourceName: string): boolean {
 const FULL_FEEDS: Record<string, Feed[]> = {
   politics: [
     { name: 'BBC World', url: rss('https://feeds.bbci.co.uk/news/world/rss.xml') },
-    { name: 'NPR News', url: rss('https://feeds.npr.org/1001/rss.xml') },
     { name: 'Guardian World', url: rss('https://www.theguardian.com/world/rss') },
     { name: 'AP News', url: rss('https://news.google.com/rss/search?q=site:apnews.com&hl=en-US&gl=US&ceid=US:en') },
+    { name: 'Reuters World', url: rss('https://news.google.com/rss/search?q=site:reuters.com+world&hl=en-US&gl=US&ceid=US:en') },
+    { name: 'CNN World', url: rss('http://rss.cnn.com/rss/cnn_world.rss') },
+  ],
+  us: [
+    { name: 'NPR News', url: rss('https://feeds.npr.org/1001/rss.xml') },
+    { name: 'Politico', url: rss('https://news.google.com/rss/search?q=site:politico.com+when:1d&hl=en-US&gl=US&ceid=US:en') },
+  ],
+  europe: [
     {
       name: 'France 24',
       url: {
@@ -470,9 +472,7 @@ const FULL_FEEDS: Record<string, Feed[]> = {
         fr: rss('https://www.lemonde.fr/rss/une.xml')
       }
     },
-    { name: 'Reuters World', url: rss('https://news.google.com/rss/search?q=site:reuters.com+world&hl=en-US&gl=US&ceid=US:en') },
-    { name: 'Politico', url: rss('https://news.google.com/rss/search?q=site:politico.com+when:1d&hl=en-US&gl=US&ceid=US:en') },
-    { name: 'The Diplomat', url: rss('https://thediplomat.com/feed/') },
+    { name: 'DW News', url: { en: rss('https://rss.dw.com/xml/rss-en-all'), de: rss('https://rss.dw.com/xml/rss-de-all'), es: rss('https://rss.dw.com/xml/rss-es-all') } },
     // Spanish (ES)
     { name: 'El País', url: rss('https://feeds.elpais.com/mrss-s/pages/ep/site/elpais.com/portada'), lang: 'es' },
     { name: 'El Mundo', url: rss('https://e00-elmundo.uecdn.es/elmundo/rss/portada.xml'), lang: 'es' },
@@ -482,7 +482,6 @@ const FULL_FEEDS: Record<string, Feed[]> = {
     { name: 'Bild', url: rss('https://www.bild.de/feed/alles.xml'), lang: 'de' },
     { name: 'Der Spiegel', url: rss('https://www.spiegel.de/schlagzeilen/tops/index.rss'), lang: 'de' },
     { name: 'Die Zeit', url: rss('https://newsfeed.zeit.de/index'), lang: 'de' },
-    { name: 'DW News', url: { en: rss('https://rss.dw.com/xml/rss-en-all'), de: rss('https://rss.dw.com/xml/rss-de-all'), es: rss('https://rss.dw.com/xml/rss-es-all') } },
     // Italian (IT)
     { name: 'ANSA', url: rss('https://www.ansa.it/sito/notizie/topnews/topnews_rss.xml'), lang: 'it' },
     { name: 'Corriere della Sera', url: rss('https://xml2.corriereobjects.it/rss/incipit.xml'), lang: 'it' },
@@ -503,22 +502,19 @@ const FULL_FEEDS: Record<string, Feed[]> = {
     { name: 'TVN24', url: rss('https://tvn24.pl/najwazniejsze.xml'), lang: 'pl' },
     { name: 'Polsat News', url: rss('https://www.polsatnews.pl/rss/wszystkie.xml'), lang: 'pl' },
     { name: 'Rzeczpospolita', url: rss('https://www.rp.pl/rss_main'), lang: 'pl' },
-    // Russian (RU) — independent sources
-    { name: 'BBC Russian', url: rss('https://feeds.bbci.co.uk/russian/rss.xml'), lang: 'ru' },
-    { name: 'Meduza', url: rss('https://meduza.io/rss/all'), lang: 'ru' },
-    { name: 'Novaya Gazeta Europe', url: rss('https://novayagazeta.eu/feed/rss'), lang: 'ru' },
-    // Thai (TH)
-    { name: 'Bangkok Post', url: rss('https://www.bangkokpost.com/rss'), lang: 'th' },
-    { name: 'Thai PBS', url: rss('https://news.google.com/rss/search?q=site:thaipbsworld.com+when:2d&hl=th&gl=TH&ceid=TH:th'), lang: 'th' },
-    // Vietnamese (VI)
-    { name: 'VnExpress', url: rss('https://vnexpress.net/rss'), lang: 'vi' },
-    { name: 'Tuoi Tre News', url: rss('https://news.google.com/rss/search?q=site:tuoitrenews.vn+when:2d&hl=vi&gl=VN&ceid=VN:vi'), lang: 'vi' },
     // Greek (EL)
     { name: 'Kathimerini', url: rss('https://news.google.com/rss/search?q=site:kathimerini.gr+when:2d&hl=el&gl=GR&ceid=GR:el'), lang: 'el' },
     { name: 'Naftemporiki', url: rss('https://www.naftemporiki.gr/feed/'), lang: 'el' },
     { name: 'in.gr', url: rss('https://www.in.gr/feed/'), lang: 'el' },
     { name: 'iefimerida', url: rss('https://www.iefimerida.gr/rss.xml'), lang: 'el' },
     { name: 'Proto Thema', url: rss('https://news.google.com/rss/search?q=site:protothema.gr+when:2d&hl=el&gl=GR&ceid=GR:el'), lang: 'el' },
+    // Russia & Ukraine (independent sources)
+    { name: 'BBC Russian', url: rss('https://feeds.bbci.co.uk/russian/rss.xml'), lang: 'ru' },
+    { name: 'Meduza', url: rss('https://meduza.io/rss/all'), lang: 'ru' },
+    { name: 'Novaya Gazeta Europe', url: rss('https://novayagazeta.eu/feed/rss'), lang: 'ru' },
+    { name: 'TASS', url: rss('https://news.google.com/rss/search?q=site:tass.com+OR+TASS+Russia+when:1d&hl=en-US&gl=US&ceid=US:en') },
+    { name: 'Kyiv Independent', url: rss('https://news.google.com/rss/search?q=site:kyivindependent.com+when:3d&hl=en-US&gl=US&ceid=US:en') },
+    { name: 'Moscow Times', url: rss('https://www.themoscowtimes.com/rss/news') },
   ],
   middleeast: [
     { name: 'BBC Middle East', url: rss('https://feeds.bbci.co.uk/news/world/middle_east/rss.xml') },
@@ -527,7 +523,6 @@ const FULL_FEEDS: Record<string, Feed[]> = {
     { name: 'Al Arabiya', url: rss('https://news.google.com/rss/search?q=site:english.alarabiya.net+when:2d&hl=en-US&gl=US&ceid=US:en') },
     // Arab News and Times of Israel removed — 403 from cloud IPs
     { name: 'Guardian ME', url: rss('https://www.theguardian.com/world/middleeast/rss') },
-    { name: 'CNN World', url: rss('http://rss.cnn.com/rss/cnn_world.rss') },
     { name: 'BBC Persian', url: rss('http://feeds.bbci.co.uk/persian/tv-and-radio-37434376/rss.xml') },
     { name: 'Iran International', url: rss('https://news.google.com/rss/search?q=site:iranintl.com+when:2d&hl=en-US&gl=US&ceid=US:en') },
     { name: 'Fars News', url: rss('https://news.google.com/rss/search?q=site:farsnews.ir+when:2d&hl=en-US&gl=US&ceid=US:en') },
@@ -602,12 +597,6 @@ const FULL_FEEDS: Record<string, Feed[]> = {
     { name: 'WHO', url: rss('https://www.who.int/rss-feeds/news-english.xml') },
     { name: 'UNHCR', url: rss('https://news.google.com/rss/search?q=site:unhcr.org+OR+UNHCR+refugees+when:3d&hl=en-US&gl=US&ceid=US:en') },
   ],
-  regional: [
-    { name: 'Xinhua', url: rss('https://news.google.com/rss/search?q=site:xinhuanet.com+OR+Xinhua+when:1d&hl=en-US&gl=US&ceid=US:en') },
-    { name: 'TASS', url: rss('https://news.google.com/rss/search?q=site:tass.com+OR+TASS+Russia+when:1d&hl=en-US&gl=US&ceid=US:en') },
-    { name: 'Kyiv Independent', url: rss('https://news.google.com/rss/search?q=site:kyivindependent.com+when:3d&hl=en-US&gl=US&ceid=US:en') },
-    { name: 'Moscow Times', url: rss('https://www.themoscowtimes.com/rss/news') },
-  ],
   africa: [
     { name: 'Africa News', url: rss('https://news.google.com/rss/search?q=(Africa+OR+Nigeria+OR+Kenya+OR+"South+Africa"+OR+Ethiopia)+when:2d&hl=en-US&gl=US&ceid=US:en') },
     { name: 'Sahel Crisis', url: rss('https://news.google.com/rss/search?q=(Sahel+OR+Mali+OR+Niger+OR+"Burkina+Faso"+OR+Wagner)+when:3d&hl=en-US&gl=US&ceid=US:en') },
@@ -636,12 +625,24 @@ const FULL_FEEDS: Record<string, Feed[]> = {
     { name: 'El Tiempo', url: rss('https://www.eltiempo.com/rss/mundo_latinoamerica.xml'), lang: 'es' },
     { name: 'El Universal', url: rss('https://www.eluniversal.com.mx/rss.xml'), lang: 'es' },
     { name: 'La Silla Vacía', url: rss('https://www.lasillavacia.com/rss') },
+    // Mexico
+    { name: 'Mexico News Daily', url: rss('https://mexiconewsdaily.com/feed/') },
+    { name: 'Animal Político', url: rss('https://animalpolitico.com/feed/'), lang: 'es' },
+    { name: 'Proceso', url: rss('https://www.proceso.com.mx/feed/'), lang: 'es' },
+    { name: 'Milenio', url: rss('https://www.milenio.com/rss'), lang: 'es' },
+    { name: 'Mexico Security', url: rss('https://news.google.com/rss/search?q=(Mexico+cartel+OR+Mexico+violence+OR+Mexico+troops+OR+narco+Mexico)+when:2d&hl=en-US&gl=US&ceid=US:en') },
+    { name: 'AP Mexico', url: rss('https://news.google.com/rss/search?q=site:apnews.com+Mexico+when:3d&hl=en-US&gl=US&ceid=US:en') },
+    // LatAm Security
+    { name: 'InSight Crime', url: rss('https://insightcrime.org/feed/') },
+    { name: 'France 24 LatAm', url: rss('https://www.france24.com/en/americas/rss') },
   ],
   asia: [
     { name: 'Asia News', url: rss('https://news.google.com/rss/search?q=(China+OR+Japan+OR+Korea+OR+India+OR+ASEAN)+when:2d&hl=en-US&gl=US&ceid=US:en') },
     { name: 'BBC Asia', url: rss('https://feeds.bbci.co.uk/news/world/asia/rss.xml') },
+    { name: 'The Diplomat', url: rss('https://thediplomat.com/feed/') },
     { name: 'South China Morning Post', url: railwayRss('https://www.scmp.com/rss/91/feed/') },
     { name: 'Reuters Asia', url: rss('https://news.google.com/rss/search?q=site:reuters.com+(China+OR+Japan+OR+Taiwan+OR+Korea)+when:3d&hl=en-US&gl=US&ceid=US:en') },
+    { name: 'Xinhua', url: rss('https://news.google.com/rss/search?q=site:xinhuanet.com+OR+Xinhua+when:1d&hl=en-US&gl=US&ceid=US:en') },
     { name: 'NHK World', url: railwayRss('https://rsshub.app/nhk/news/en') },
     { name: 'Nikkei Asia', url: rss('https://news.google.com/rss/search?q=site:asia.nikkei.com+when:3d&hl=en-US&gl=US&ceid=US:en') },
     { name: 'Asahi Shimbun', url: rss('https://www.asahi.com/rss/asahi/newsheadlines.rdf'), lang: 'ja' },
@@ -649,9 +650,17 @@ const FULL_FEEDS: Record<string, Feed[]> = {
     { name: 'CNA', url: rss('https://www.channelnewsasia.com/api/v1/rss-outbound-feed?_format=xml') },
     { name: 'MIIT (China)', url: railwayRss('https://rsshub.app/gov/miit/zcjd'), lang: 'zh' },
     { name: 'MOFCOM (China)', url: railwayRss('https://rsshub.app/gov/mofcom/article/xwfb'), lang: 'zh' },
+    // Thailand
+    { name: 'Bangkok Post', url: rss('https://www.bangkokpost.com/rss'), lang: 'th' },
+    { name: 'Thai PBS', url: rss('https://news.google.com/rss/search?q=site:thaipbsworld.com+when:2d&hl=th&gl=TH&ceid=TH:th'), lang: 'th' },
+    // Vietnam
+    { name: 'VnExpress', url: rss('https://vnexpress.net/rss'), lang: 'vi' },
+    { name: 'Tuoi Tre News', url: rss('https://news.google.com/rss/search?q=site:tuoitrenews.vn+when:2d&hl=vi&gl=VN&ceid=VN:vi'), lang: 'vi' },
     // Australia
     { name: 'ABC News Australia', url: rss('https://www.abc.net.au/news/feed/2942460/rss.xml') },
     { name: 'Guardian Australia', url: rss('https://www.theguardian.com/australia-news/rss') },
+    // Pacific Islands
+    { name: 'Island Times (Palau)', url: rss('https://islandtimes.org/feed/') },
   ],
   energy: [
     { name: 'Oil & Gas', url: rss('https://news.google.com/rss/search?q=(oil+price+OR+OPEC+OR+"natural+gas"+OR+pipeline+OR+LNG)+when:2d&hl=en-US&gl=US&ceid=US:en') },
@@ -1008,6 +1017,39 @@ export const FEEDS = SITE_VARIANT === 'tech'
     : SITE_VARIANT === 'happy'
       ? HAPPY_FEEDS
       : FULL_FEEDS;
+
+export const SOURCE_REGION_MAP: Record<string, { labelKey: string; feedKeys: string[] }> = {
+  // Full (geopolitical) variant regions
+  worldwide: { labelKey: 'header.sourceRegionWorldwide', feedKeys: ['politics', 'crisis'] },
+  us: { labelKey: 'header.sourceRegionUS', feedKeys: ['us', 'gov'] },
+  europe: { labelKey: 'header.sourceRegionEurope', feedKeys: ['europe'] },
+  middleeast: { labelKey: 'header.sourceRegionMiddleEast', feedKeys: ['middleeast'] },
+  africa: { labelKey: 'header.sourceRegionAfrica', feedKeys: ['africa'] },
+  latam: { labelKey: 'header.sourceRegionLatAm', feedKeys: ['latam'] },
+  asia: { labelKey: 'header.sourceRegionAsiaPacific', feedKeys: ['asia'] },
+  topical: { labelKey: 'header.sourceRegionTopical', feedKeys: ['energy', 'tech', 'ai', 'finance', 'layoffs', 'thinktanks'] },
+  intel: { labelKey: 'header.sourceRegionIntel', feedKeys: [] },
+
+  // Tech variant regions
+  techNews: { labelKey: 'header.sourceRegionTechNews', feedKeys: ['tech', 'hardware'] },
+  aiMl: { labelKey: 'header.sourceRegionAiMl', feedKeys: ['ai'] },
+  startupsVc: { labelKey: 'header.sourceRegionStartupsVc', feedKeys: ['startups', 'vcblogs', 'funding', 'unicorns', 'accelerators', 'ipo'] },
+  regionalTech: { labelKey: 'header.sourceRegionRegionalTech', feedKeys: ['regionalStartups'] },
+  developer: { labelKey: 'header.sourceRegionDeveloper', feedKeys: ['github', 'cloud', 'dev', 'producthunt', 'outages'] },
+  cybersecurity: { labelKey: 'header.sourceRegionCybersecurity', feedKeys: ['security'] },
+  techPolicy: { labelKey: 'header.sourceRegionTechPolicy', feedKeys: ['policy', 'thinktanks'] },
+  techMedia: { labelKey: 'header.sourceRegionTechMedia', feedKeys: ['podcasts', 'layoffs', 'finance'] },
+
+  // Finance variant regions
+  marketsAnalysis: { labelKey: 'header.sourceRegionMarkets', feedKeys: ['markets', 'analysis', 'ipo'] },
+  fixedIncomeFx: { labelKey: 'header.sourceRegionFixedIncomeFx', feedKeys: ['forex', 'bonds'] },
+  commoditiesRegion: { labelKey: 'header.sourceRegionCommodities', feedKeys: ['commodities'] },
+  cryptoDigital: { labelKey: 'header.sourceRegionCryptoDigital', feedKeys: ['crypto', 'fintech'] },
+  centralBanksEcon: { labelKey: 'header.sourceRegionCentralBanks', feedKeys: ['centralbanks', 'economic'] },
+  dealsCorpFin: { labelKey: 'header.sourceRegionDeals', feedKeys: ['institutional', 'derivatives'] },
+  finRegulation: { labelKey: 'header.sourceRegionFinRegulation', feedKeys: ['regulation'] },
+  gulfMena: { labelKey: 'header.sourceRegionGulfMena', feedKeys: ['gccNews'] },
+};
 
 export const INTEL_SOURCES: Feed[] = [
   // Defense & Security (Tier 1)
