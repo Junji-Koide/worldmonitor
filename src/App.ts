@@ -17,7 +17,7 @@ import type { ParsedMapUrlState } from '@/utils';
 import { SignalModal, IntelligenceGapBadge } from '@/components';
 import { isDesktopRuntime } from '@/services/runtime';
 import { trackEvent, trackDeeplinkOpened } from '@/services/analytics';
-import { preloadCountryGeometry } from '@/services/country-geometry';
+import { preloadCountryGeometry, getCountryNameByCode } from '@/services/country-geometry';
 import { initI18n } from '@/services/i18n';
 
 import { DesktopUpdater } from '@/app/desktop-updater';
@@ -407,14 +407,7 @@ export class App {
       const countryCode = url.searchParams.get('c');
       if (countryCode) {
         trackDeeplinkOpened('story', countryCode);
-        const countryNames: Record<string, string> = {
-          UA: 'Ukraine', RU: 'Russia', CN: 'China', US: 'United States',
-          IR: 'Iran', IL: 'Israel', TW: 'Taiwan', KP: 'North Korea',
-          SA: 'Saudi Arabia', TR: 'Turkey', PL: 'Poland', DE: 'Germany',
-          FR: 'France', GB: 'United Kingdom', IN: 'India', PK: 'Pakistan',
-          SY: 'Syria', YE: 'Yemen', MM: 'Myanmar', VE: 'Venezuela',
-        };
-        const countryName = countryNames[countryCode.toUpperCase()] || countryCode;
+        const countryName = getCountryNameByCode(countryCode.toUpperCase()) || countryCode;
 
         let attempts = 0;
         const checkAndOpen = () => {
