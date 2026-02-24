@@ -86,13 +86,14 @@ export class GivingPanel extends Panel {
         break;
     }
 
-    this.setContent(`
+    // Write directly to bypass debounced setContent — tabs need immediate listeners
+    this.content.innerHTML = `
       <div class="giving-panel-content">
         <div class="giving-stats-grid">${statsHtml}</div>
         ${tabsHtml}
         ${contentHtml}
       </div>
-    `);
+    `;
 
     // Attach tab click listeners
     this.content.querySelectorAll('.giving-tab').forEach(btn => {
