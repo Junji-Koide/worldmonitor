@@ -87,7 +87,8 @@ const CATEGORY_KEYWORDS: Array<[string, HappyContentCategory]> = [
   ['innovation', 'innovation-tech'],
   ['engineering', 'innovation-tech'],
   ['3d print', 'innovation-tech'],
-  ['ai', 'innovation-tech'],
+  ['artificial intelligence', 'innovation-tech'],
+  [' ai ', 'innovation-tech'],
 
   // Humanity & Kindness
   ['volunteer', 'humanity-kindness'],
@@ -100,7 +101,7 @@ const CATEGORY_KEYWORDS: Array<[string, HappyContentCategory]> = [
   ['community', 'humanity-kindness'],
 
   // Culture & Community
-  ['art', 'culture-community'],
+  [' art ', 'culture-community'],
   ['music', 'culture-community'],
   ['festival', 'culture-community'],
   ['cultural', 'culture-community'],
@@ -116,7 +117,8 @@ const CATEGORY_KEYWORDS: Array<[string, HappyContentCategory]> = [
  * (safe default for curated positive sources).
  */
 export function classifyPositiveContent(title: string): HappyContentCategory {
-  const lower = title.toLowerCase();
+  // Pad with spaces so space-delimited keywords (e.g. ' ai ') match at boundaries
+  const lower = ` ${title.toLowerCase()} `;
   for (const [keyword, category] of CATEGORY_KEYWORDS) {
     if (lower.includes(keyword)) return category;
   }

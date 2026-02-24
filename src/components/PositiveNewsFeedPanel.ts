@@ -111,7 +111,8 @@ export class PositiveNewsFeedPanel extends Panel {
 
     this.content.innerHTML = items.map((item, idx) => this.renderCard(item, idx)).join('');
 
-    // Delegated click handler for share buttons
+    // Delegated click handler for share buttons (remove first to avoid stacking)
+    this.content.removeEventListener('click', this.handleShareClick);
     this.content.addEventListener('click', this.handleShareClick);
   }
 

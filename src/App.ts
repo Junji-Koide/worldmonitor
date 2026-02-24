@@ -126,7 +126,7 @@ import { isFeatureAvailable } from '@/services/runtime-config';
 import { trackEvent, trackPanelView, trackVariantSwitch, trackThemeChanged, trackMapViewChange, trackMapLayerToggle, trackCountrySelected, trackCountryBriefOpened, trackSearchResultSelected, trackPanelToggled, trackUpdateShown, trackUpdateClicked, trackUpdateDismissed, trackCriticalBannerAction, trackDeeplinkOpened } from '@/services/analytics';
 import { invokeTauri } from '@/services/tauri-bridge';
 import { getCountryAtCoordinates, hasCountryGeometry, isCoordinateInCountry, preloadCountryGeometry } from '@/services/country-geometry';
-import { initI18n, t, changeLanguage } from '@/services/i18n';
+import { initI18n, t } from '@/services/i18n';
 import { getPersistentCache, setPersistentCache } from '@/services/persistent-cache';
 
 import type { MarketData, ClusteredEvent } from '@/types';
@@ -3111,14 +3111,19 @@ export class App {
   }
 
   private toggleTvMode(): void {
+    // Always rebuild panel keys to reflect current visibility settings
+    const panelKeys = Object.keys(DEFAULT_PANELS).filter(
+      key => this.panelSettings[key]?.enabled !== false
+    );
     if (!this.tvMode) {
-      const panelKeys = Object.keys(DEFAULT_PANELS);
       this.tvMode = new TvModeController({
         panelKeys,
         onPanelChange: () => {
           document.getElementById('tvModeBtn')?.classList.toggle('active', this.tvMode?.active ?? false);
         }
       });
+    } else {
+      this.tvMode.updatePanelKeys(panelKeys);
     }
     this.tvMode.toggle();
     document.getElementById('tvModeBtn')?.classList.toggle('active', this.tvMode.active);

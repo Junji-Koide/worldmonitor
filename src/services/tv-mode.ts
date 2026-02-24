@@ -111,6 +111,13 @@ export class TvModeController {
     }
   }
 
+  updatePanelKeys(keys: string[]): void {
+    this.panelKeys = keys;
+    if (this.currentIndex >= this.panelKeys.length) {
+      this.currentIndex = 0;
+    }
+  }
+
   destroy(): void {
     this.exit();
     this.onPanelChange = undefined;
