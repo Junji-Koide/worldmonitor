@@ -34,7 +34,7 @@ export interface SummarizeOptions {
 // ── Sebuf client (replaces direct fetch to /api/{provider}-summarize) ──
 
 const newsClient = new NewsServiceClient('', { fetch: (...args) => globalThis.fetch(...args) });
-const summaryBreaker = createCircuitBreaker<SummarizeArticleResponse>({ name: 'News Summarization' });
+const summaryBreaker = createCircuitBreaker<SummarizeArticleResponse>({ name: 'News Summarization', cacheTtlMs: 0 });
 
 const emptySummaryFallback: SummarizeArticleResponse = { summary: '', provider: '', model: '', cached: false, skipped: false, fallback: true, tokens: 0, reason: '', error: '', errorType: '' };
 
@@ -107,7 +107,7 @@ async function tryBrowserT5(headlines: string[], modelId?: string): Promise<Summ
     }
     lastAttemptedProvider = 'browser';
 
-    const combinedText = headlines.slice(0, 6).map(h => h.slice(0, 80)).join('. ');
+    const combinedText = headlines.slice(0, 5).map(h => h.slice(0, 80)).join('. ');
     const prompt = `Summarize the main themes from these news headlines in 2 sentences: ${combinedText}`;
 
     const [summary] = await mlWorker.summarize([prompt], modelId);
