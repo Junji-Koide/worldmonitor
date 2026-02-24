@@ -505,6 +505,8 @@ function getRelayRollingMetrics() {
       dedupHits: dedupCount,
       misses: rollup.openskyMiss,
       upstreamFetches: rollup.openskyUpstreamFetches,
+      global429CooldownRemainingMs: Math.max(0, openskyGlobal429Until - Date.now()),
+      requestSpacingMs: OPENSKY_REQUEST_SPACING_MS,
     },
     ais: {
       queueMax: rollup.queueMax,
@@ -1187,8 +1189,8 @@ async function handleUcdpEventsRequest(req, res) {
 const openskyResponseCache = new Map(); // key: sorted query params → { data, gzip, timestamp }
 const openskyNegativeCache = new Map(); // key: cacheKey → { status, timestamp, body, gzip } — prevents retry storms on 429/5xx
 const openskyInFlight = new Map(); // key: cacheKey → Promise (dedup concurrent requests)
-const OPENSKY_CACHE_TTL_MS = 30 * 1000; // 30s — OpenSky updates every ~10s but 58 clients hammer it
-const OPENSKY_NEGATIVE_CACHE_TTL_MS = 30 * 1000; // 30s — cache 429/5xx to stop thundering herd
+const OPENSKY_CACHE_TTL_MS = Number(process.env.OPENSKY_CACHE_TTL_MS) || 60 * 1000; // 60s default — env-configurable
+const OPENSKY_NEGATIVE_CACHE_TTL_MS = Number(process.env.OPENSKY_NEGATIVE_CACHE_TTL_MS) || 30 * 1000; // 30s — env-configurable
 const OPENSKY_CACHE_MAX_ENTRIES = Math.max(10, Number(process.env.OPENSKY_CACHE_MAX_ENTRIES || 128));
 const OPENSKY_NEGATIVE_CACHE_MAX_ENTRIES = Math.max(10, Number(process.env.OPENSKY_NEGATIVE_CACHE_MAX_ENTRIES || 256));
 const OPENSKY_BBOX_QUANT_STEP = Number.isFinite(Number(process.env.OPENSKY_BBOX_QUANT_STEP))
@@ -1286,6 +1288,13 @@ let openskyTokenPromise = null; // mutex: single in-flight token request
 let openskyAuthCooldownUntil = 0; // backoff after repeated failures
 const OPENSKY_AUTH_COOLDOWN_MS = 60000; // 1 min cooldown after auth failure
 
+// Global OpenSky rate limiter — serializes upstream requests and enforces 429 cooldown
+let openskyGlobal429Until = 0; // timestamp: block ALL upstream requests until this time
+const OPENSKY_429_COOLDOWN_MS = Number(process.env.OPENSKY_429_COOLDOWN_MS) || 90 * 1000; // 90s cooldown after any 429
+const OPENSKY_REQUEST_SPACING_MS = Number(process.env.OPENSKY_REQUEST_SPACING_MS) || 2000; // 2s minimum between consecutive upstream requests
+let openskyLastUpstreamTime = 0;
+let openskyUpstreamQueue = Promise.resolve(); // serial chain — only 1 upstream request at a time
+
 async function getOpenSkyToken() {
   const clientId = process.env.OPENSKY_CLIENT_ID;
   const clientSecret = process.env.OPENSKY_CLIENT_SECRET;
@@ -1317,70 +1326,125 @@ async function getOpenSkyToken() {
   }
 }
 
-async function _fetchOpenSkyToken(clientId, clientSecret) {
-  try {
-    console.log('[Relay] Fetching new OpenSky OAuth2 token...');
+function _attemptOpenSkyTokenFetch(clientId, clientSecret) {
+  return new Promise((resolve) => {
+    const postData = `grant_type=client_credentials&client_id=${encodeURIComponent(clientId)}&client_secret=${encodeURIComponent(clientSecret)}`;
 
-    const token = await new Promise((resolve) => {
-      const postData = `grant_type=client_credentials&client_id=${encodeURIComponent(clientId)}&client_secret=${encodeURIComponent(clientSecret)}`;
-
-      const req = https.request({
-        hostname: 'auth.opensky-network.org',
-        port: 443,
-        path: '/auth/realms/opensky-network/protocol/openid-connect/token',
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-          'Content-Length': Buffer.byteLength(postData),
-        },
-        timeout: 10000
-      }, (res) => {
-        let data = '';
-        res.on('data', chunk => data += chunk);
-        res.on('end', () => {
-          try {
-            const json = JSON.parse(data);
-            if (json.access_token) {
-              openskyToken = json.access_token;
-              openskyTokenExpiry = Date.now() + (json.expires_in || 1800) * 1000;
-              console.log('[Relay] OpenSky token acquired, expires in', json.expires_in, 'seconds');
-              resolve(openskyToken);
-            } else {
-              console.error('[Relay] OpenSky token error:', json.error || 'Unknown');
-              resolve(null);
-            }
-          } catch (e) {
-            console.error('[Relay] OpenSky token parse error:', e.message);
-            resolve(null);
+    const req = https.request({
+      hostname: 'auth.opensky-network.org',
+      port: 443,
+      family: 4,
+      path: '/auth/realms/opensky-network/protocol/openid-connect/token',
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Content-Length': Buffer.byteLength(postData),
+        'User-Agent': 'WorldMonitor/1.0',
+      },
+      timeout: 10000
+    }, (res) => {
+      let data = '';
+      res.on('data', chunk => data += chunk);
+      res.on('end', () => {
+        try {
+          const json = JSON.parse(data);
+          if (json.access_token) {
+            resolve({ token: json.access_token, expiresIn: json.expires_in || 1800 });
+          } else {
+            resolve({ error: json.error || 'no_access_token', status: res.statusCode });
           }
-        });
+        } catch (e) {
+          resolve({ error: `parse: ${e.message}`, status: res.statusCode });
+        }
       });
-
-      req.on('error', (err) => {
-        console.error('[Relay] OpenSky token request error:', err.message);
-        resolve(null);
-      });
-
-      req.on('timeout', () => {
-        req.destroy();
-        resolve(null);
-      });
-
-      req.write(postData);
-      req.end();
     });
 
-    if (!token) {
-      // Auth failed — cooldown to prevent stampede
-      openskyAuthCooldownUntil = Date.now() + OPENSKY_AUTH_COOLDOWN_MS;
-      console.warn(`[Relay] OpenSky auth failed, cooling down for ${OPENSKY_AUTH_COOLDOWN_MS / 1000}s`);
+    req.on('error', (err) => {
+      resolve({ error: `${err.code || 'UNKNOWN'}: ${err.message}` });
+    });
+
+    req.on('timeout', () => {
+      req.destroy();
+      resolve({ error: 'TIMEOUT' });
+    });
+
+    req.write(postData);
+    req.end();
+  });
+}
+
+const OPENSKY_AUTH_MAX_RETRIES = 3;
+const OPENSKY_AUTH_RETRY_DELAYS = [0, 2000, 5000];
+
+async function _fetchOpenSkyToken(clientId, clientSecret) {
+  try {
+    for (let attempt = 0; attempt < OPENSKY_AUTH_MAX_RETRIES; attempt++) {
+      if (attempt > 0) {
+        const delay = OPENSKY_AUTH_RETRY_DELAYS[attempt] || 5000;
+        console.log(`[Relay] OpenSky auth retry ${attempt + 1}/${OPENSKY_AUTH_MAX_RETRIES} in ${delay}ms...`);
+        await new Promise(r => setTimeout(r, delay));
+      } else {
+        console.log('[Relay] Fetching new OpenSky OAuth2 token...');
+      }
+
+      const result = await _attemptOpenSkyTokenFetch(clientId, clientSecret);
+      if (result.token) {
+        openskyToken = result.token;
+        openskyTokenExpiry = Date.now() + result.expiresIn * 1000;
+        console.log('[Relay] OpenSky token acquired, expires in', result.expiresIn, 'seconds');
+        return openskyToken;
+      }
+      console.error(`[Relay] OpenSky auth attempt ${attempt + 1} failed:`, result.error, result.status ? `(HTTP ${result.status})` : '');
     }
-    return token;
+
+    openskyAuthCooldownUntil = Date.now() + OPENSKY_AUTH_COOLDOWN_MS;
+    console.warn(`[Relay] OpenSky auth failed after ${OPENSKY_AUTH_MAX_RETRIES} attempts, cooling down for ${OPENSKY_AUTH_COOLDOWN_MS / 1000}s`);
+    return null;
   } catch (err) {
     console.error('[Relay] OpenSky token error:', err.message);
     openskyAuthCooldownUntil = Date.now() + OPENSKY_AUTH_COOLDOWN_MS;
     return null;
   }
+}
+
+// Promisified upstream OpenSky fetch (single request)
+function _openskyRawFetch(url, token) {
+  return new Promise((resolve) => {
+    const request = https.get(url, {
+      family: 4,
+      headers: {
+        'Accept': 'application/json',
+        'User-Agent': 'WorldMonitor/1.0',
+        'Authorization': `Bearer ${token}`,
+      },
+      timeout: 15000,
+    }, (response) => {
+      let data = '';
+      response.on('data', chunk => data += chunk);
+      response.on('end', () => resolve({ status: response.statusCode || 502, data }));
+    });
+    request.on('error', (err) => resolve({ status: 0, data: null, error: err }));
+    request.on('timeout', () => { request.destroy(); resolve({ status: 504, data: null, error: new Error('timeout') }); });
+  });
+}
+
+// Serialized queue — ensures only 1 upstream request at a time with minimum spacing.
+// Prevents 5 concurrent bbox queries from all getting 429'd.
+function openskyQueuedFetch(url, token) {
+  const job = openskyUpstreamQueue.then(async () => {
+    if (Date.now() < openskyGlobal429Until) {
+      return { status: 429, data: JSON.stringify({ states: [], time: Date.now() }), rateLimited: true };
+    }
+    const wait = OPENSKY_REQUEST_SPACING_MS - (Date.now() - openskyLastUpstreamTime);
+    if (wait > 0) await new Promise(r => setTimeout(r, wait));
+    if (Date.now() < openskyGlobal429Until) {
+      return { status: 429, data: JSON.stringify({ states: [], time: Date.now() }), rateLimited: true };
+    }
+    openskyLastUpstreamTime = Date.now();
+    return _openskyRawFetch(url, token);
+  });
+  openskyUpstreamQueue = job.catch(() => {});
+  return job;
 }
 
 async function handleOpenSkyRequest(req, res, PORT) {
@@ -1423,6 +1487,19 @@ async function handleOpenSkyRequest(req, res, PORT) {
         'Cache-Control': 'no-cache',
         'X-Cache': 'NEG',
       }, negCached.body, negCached.gzip);
+    }
+
+    // 2b. Global 429 cooldown — blocks ALL bbox queries when OpenSky is rate-limiting.
+    //     Without this, 5 unique bbox keys all fire simultaneously when neg cache expires,
+    //     ALL get 429'd, and the cycle repeats forever with zero data flowing.
+    if (Date.now() < openskyGlobal429Until) {
+      incrementRelayMetric('openskyNegativeHit');
+      cacheOpenSkyNegative(cacheKey, 429);
+      return sendCompressed(req, res, 200, {
+        'Content-Type': 'application/json',
+        'Cache-Control': 'no-cache',
+        'X-Cache': 'RATE-LIMITED',
+      }, JSON.stringify({ states: [], time: Date.now() }));
     }
 
     // 3. Dedup concurrent requests — await in-flight and return result OR empty (never fall through)
@@ -1475,7 +1552,8 @@ async function handleOpenSkyRequest(req, res, PORT) {
 
     const token = await getOpenSkyToken();
     if (!token) {
-      cacheOpenSkyNegative(cacheKey, 503);
+      // Do NOT negative-cache auth failures — they poison ALL bbox keys.
+      // Only negative-cache actual upstream 429/5xx responses.
       settleFlight();
       openskyInFlight.delete(cacheKey);
       return safeEnd(res, 503, { 'Content-Type': 'application/json' },
@@ -1490,79 +1568,46 @@ async function handleOpenSkyRequest(req, res, PORT) {
     logThrottled('log', `opensky-miss:${cacheKey}`, '[Relay] OpenSky request (MISS):', openskyUrl);
     incrementRelayMetric('openskyUpstreamFetches');
 
-    let responded = false;
-    const request = https.get(openskyUrl, {
-      headers: {
-        'Accept': 'application/json',
-        'User-Agent': 'WorldMonitor/1.0',
-        'Authorization': `Bearer ${token}`,
-      },
-      timeout: 15000
-    }, (response) => {
-      let data = '';
-      response.on('data', chunk => data += chunk);
-      response.on('end', () => {
-        const upstreamStatus = response.statusCode || 502;
-        if (upstreamStatus === 401) {
-          openskyToken = null;
-          openskyTokenExpiry = 0;
-        }
-        if (upstreamStatus === 200) {
-          cacheOpenSkyPositive(cacheKey, data);
-          openskyNegativeCache.delete(cacheKey);
-        } else {
-          // Negative-cache non-200 (429, 5xx) to prevent retry storms
-          cacheOpenSkyNegative(cacheKey, upstreamStatus);
-          logThrottled(
-            'warn',
-            `opensky-upstream-${upstreamStatus}:${cacheKey}`,
-            `[Relay] OpenSky upstream ${upstreamStatus} for ${openskyUrl}, negative-cached for ${OPENSKY_NEGATIVE_CACHE_TTL_MS / 1000}s`
-          );
-        }
-        settleFlight();
-        openskyInFlight.delete(cacheKey);
-        if (!responded) {
-          responded = true;
-          sendCompressed(req, res, upstreamStatus, {
-            'Content-Type': 'application/json',
-            'Cache-Control': upstreamStatus === 200 ? 'public, max-age=30' : 'no-cache',
-            'X-Cache': 'MISS',
-          }, data);
-        }
-      });
-    });
+    // Serialized fetch — queued with spacing to prevent concurrent 429 storms
+    const result = await openskyQueuedFetch(openskyUrl, token);
+    const upstreamStatus = result.status || 502;
 
-    request.on('error', (err) => {
-      logThrottled('error', `opensky-error:${cacheKey}:${err.code || err.message}`, '[Relay] OpenSky error:', err.message);
-      cacheOpenSkyNegative(cacheKey, 500);
-      if (responded) { settleFlight(); openskyInFlight.delete(cacheKey); return; }
-      responded = true;
-      if (cached) {
-        settleFlight();
-        openskyInFlight.delete(cacheKey);
-        return sendPreGzipped(req, res, 200, { 'Content-Type': 'application/json', 'X-Cache': 'STALE' }, cached.data, cached.gzip);
-      }
-      settleFlight();
-      openskyInFlight.delete(cacheKey);
-      safeEnd(res, 500, { 'Content-Type': 'application/json' },
-        JSON.stringify({ error: err.message, time: Date.now(), states: null }));
-    });
+    if (upstreamStatus === 401) {
+      openskyToken = null;
+      openskyTokenExpiry = 0;
+    }
 
-    request.on('timeout', () => {
-      request.destroy();
-      cacheOpenSkyNegative(cacheKey, 504);
-      if (responded) { settleFlight(); openskyInFlight.delete(cacheKey); return; }
-      responded = true;
-      if (cached) {
-        settleFlight();
-        openskyInFlight.delete(cacheKey);
-        return sendPreGzipped(req, res, 200, { 'Content-Type': 'application/json', 'X-Cache': 'STALE' }, cached.data, cached.gzip);
-      }
-      settleFlight();
-      openskyInFlight.delete(cacheKey);
-      safeEnd(res, 504, { 'Content-Type': 'application/json' },
-        JSON.stringify({ error: 'Request timeout', time: Date.now(), states: null }));
-    });
+    if (upstreamStatus === 429 && !result.rateLimited) {
+      openskyGlobal429Until = Date.now() + OPENSKY_429_COOLDOWN_MS;
+      console.warn(`[Relay] OpenSky 429 — global cooldown ${OPENSKY_429_COOLDOWN_MS / 1000}s (all bbox queries blocked)`);
+    }
+
+    if (upstreamStatus === 200 && result.data) {
+      cacheOpenSkyPositive(cacheKey, result.data);
+      openskyNegativeCache.delete(cacheKey);
+    } else if (result.error) {
+      logThrottled('error', `opensky-error:${cacheKey}:${result.error.code || result.error.message}`, '[Relay] OpenSky error:', result.error.message);
+      cacheOpenSkyNegative(cacheKey, upstreamStatus || 500);
+    } else {
+      cacheOpenSkyNegative(cacheKey, upstreamStatus);
+      logThrottled('warn', `opensky-upstream-${upstreamStatus}:${cacheKey}`,
+        `[Relay] OpenSky upstream ${upstreamStatus} for ${openskyUrl}, negative-cached for ${OPENSKY_NEGATIVE_CACHE_TTL_MS / 1000}s`);
+    }
+
+    settleFlight();
+    openskyInFlight.delete(cacheKey);
+
+    // Serve stale cache on network errors
+    if (result.error && cached) {
+      return sendPreGzipped(req, res, 200, { 'Content-Type': 'application/json', 'X-Cache': 'STALE' }, cached.data, cached.gzip);
+    }
+
+    const responseData = result.data || JSON.stringify({ error: result.error?.message || 'upstream error', time: Date.now(), states: null });
+    return sendCompressed(req, res, upstreamStatus, {
+      'Content-Type': 'application/json',
+      'Cache-Control': upstreamStatus === 200 ? 'public, max-age=30' : 'no-cache',
+      'X-Cache': result.rateLimited ? 'RATE-LIMITED' : 'MISS',
+    }, responseData);
   } catch (err) {
     if (settleFlight) settleFlight();
     if (!cacheKey) {
@@ -2006,6 +2051,23 @@ const server = http.createServer(async (req, res) => {
         'Cache-Control': 'public, max-age=2',
       }, JSON.stringify(payload));
     }
+  } else if (pathname === '/opensky-reset') {
+    openskyToken = null;
+    openskyTokenExpiry = 0;
+    openskyTokenPromise = null;
+    openskyAuthCooldownUntil = 0;
+    openskyGlobal429Until = 0;
+    openskyNegativeCache.clear();
+    console.log('[Relay] OpenSky auth + rate-limit state reset via /opensky-reset');
+    const tokenStart = Date.now();
+    const token = await getOpenSkyToken();
+    return sendCompressed(req, res, 200, { 'Content-Type': 'application/json' }, JSON.stringify({
+      reset: true,
+      tokenAcquired: !!token,
+      latencyMs: Date.now() - tokenStart,
+      negativeCacheCleared: true,
+      rateLimitCooldownCleared: true,
+    }));
   } else if (pathname === '/opensky-diag') {
     // Temporary diagnostic route with safe output only (no token payloads).
     const now = Date.now();
@@ -2022,6 +2084,8 @@ const server = http.createServer(async (req, res) => {
       tokenExpiry: openskyTokenExpiry ? new Date(openskyTokenExpiry).toISOString() : null,
       cooldownRemainingMs: Math.max(0, openskyAuthCooldownUntil - now),
       tokenFetchInFlight: !!openskyTokenPromise,
+      global429CooldownRemainingMs: Math.max(0, openskyGlobal429Until - now),
+      requestSpacingMs: OPENSKY_REQUEST_SPACING_MS,
     });
 
     if (!clientId || !clientSecret) {
@@ -2046,6 +2110,7 @@ const server = http.createServer(async (req, res) => {
       const apiResult = await new Promise((resolve) => {
         const start = Date.now();
         const apiReq = https.get('https://opensky-network.org/api/states/all?lamin=47&lomin=5&lamax=48&lomax=6', {
+          family: 4,
           headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' },
           timeout: 15000,
         }, (apiRes) => {
