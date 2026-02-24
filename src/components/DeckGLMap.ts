@@ -2417,11 +2417,10 @@ export class DeckGLMap {
       }
     };
 
-    // Truncate label based on zoom: short at global, full when zoomed in
-    const maxChars = zoom < 3 ? 20 : zoom < 5 ? 35 : zoom < 7 ? 60 : Infinity;
+    // Truncate label: show emoji + name (max 30 chars)
     const getLabel = (d: PositiveGeoEvent): string => {
       const emoji = getCategoryEmoji(d.category);
-      const name = d.name.length > maxChars ? d.name.slice(0, maxChars - 2) + '\u2026' : d.name;
+      const name = d.name.length > 30 ? d.name.slice(0, 28) + '\u2026' : d.name;
       return `${emoji} ${name}`;
     };
 
@@ -2458,7 +2457,6 @@ export class DeckGLMap {
         outlineWidth: 0,
         billboard: true,
         sizeUnits: 'pixels' as const,
-        updateTriggers: { getText: maxChars },
       }));
     }
 
@@ -2487,7 +2485,6 @@ export class DeckGLMap {
   }
 
   private createKindnessLayers(): Layer[] {
-    const zoom = this.maplibreMap?.getZoom() || 2;
     const layers: Layer[] = [];
     // Only render real kindness events (baseline was removed)
     if (this.kindnessPoints.length === 0) return layers;
@@ -2504,14 +2501,13 @@ export class DeckGLMap {
       pickable: true,
     }));
 
-    // Text labels — expand with zoom
-    const maxChars = zoom < 3 ? 20 : zoom < 5 ? 35 : zoom < 7 ? 60 : Infinity;
+    // Text labels for real kindness events
     layers.push(new TextLayer<KindnessPoint>({
       id: 'kindness-labels',
       data: this.kindnessPoints,
       getPosition: (d: KindnessPoint) => [d.lon, d.lat],
       getText: (d: KindnessPoint) => {
-        const name = d.name.length > maxChars ? d.name.slice(0, maxChars - 2) + '\u2026' : d.name;
+        const name = d.name.length > 30 ? d.name.slice(0, 28) + '\u2026' : d.name;
         return `\u{1F49A} ${name}`;
       },
       getSize: 11,
@@ -2525,7 +2521,6 @@ export class DeckGLMap {
       pickable: false,
       billboard: true,
       sizeUnits: 'pixels' as const,
-      updateTriggers: { getText: maxChars },
     }));
 
     // Pulse for real events
