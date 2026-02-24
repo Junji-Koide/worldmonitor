@@ -268,6 +268,12 @@ export class App {
         STORAGE_KEYS.panels,
         DEFAULT_PANELS
       );
+      // Merge in any new panels that didn't exist when settings were saved
+      for (const [key, config] of Object.entries(DEFAULT_PANELS)) {
+        if (!(key in this.panelSettings)) {
+          this.panelSettings[key] = { ...config };
+        }
+      }
       console.log('[App] Loaded panel settings from storage:', Object.entries(this.panelSettings).filter(([_, v]) => !v.enabled).map(([k]) => k));
 
       // One-time migration: reorder panels for existing users (v1.9 panel layout)
