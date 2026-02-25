@@ -126,7 +126,7 @@ const VARIANT_META: Record<string, {
     title: 'Japan Monitor - リアルタイム日本インテリジェンスダッシュボード',
     description: 'リアルタイムの日本語ダッシュボード。地震・台風・国内外ニュース・市場データ・安全保障情報を一画面で監視。',
     keywords: 'Japan monitor, 日本ダッシュボード, 地震情報, 台風, 日本ニュース, 日経平均, 安全保障, OSINT, インテリジェンス, アジア, Japan intelligence dashboard',
-    url: 'https://japan.worldmonitor.app/',
+    url: 'https://japan.koide.io/',
     siteName: 'Japan Monitor',
     shortName: 'JapanMonitor',
     subject: 'リアルタイム日本情勢・インテリジェンスダッシュボード',

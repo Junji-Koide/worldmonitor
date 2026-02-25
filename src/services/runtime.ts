@@ -2,6 +2,7 @@ const DEFAULT_REMOTE_HOSTS: Record<string, string> = {
   tech: 'https://tech.worldmonitor.app',
   full: 'https://worldmonitor.app',
   world: 'https://worldmonitor.app',
+  japan: 'https://japan.koide.io',
 };
 
 const DEFAULT_LOCAL_API_BASE = 'http://127.0.0.1:46123';
@@ -102,6 +103,7 @@ const APP_HOSTS = new Set([
   'worldmonitor.app',
   'www.worldmonitor.app',
   'tech.worldmonitor.app',
+  'japan.koide.io',
   'localhost',
   '127.0.0.1',
 ]);
