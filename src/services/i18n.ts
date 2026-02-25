@@ -1,5 +1,6 @@
 import i18next from 'i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
+import { SITE_VARIANT } from '@/config/variant';
 
 // English is always needed as fallback — bundle it eagerly.
 import enTranslation from '../locales/en.json';
@@ -72,6 +73,10 @@ export async function initI18n(): Promise<void> {
 
   loadedLanguages.add('en');
 
+  // Japan variant: default to Japanese if no language is stored
+  const hasStoredLanguage = typeof window !== 'undefined' && !!localStorage.getItem('i18nextLng');
+  const japanVariantDefault = SITE_VARIANT === 'japan' && !hasStoredLanguage ? 'ja' : undefined;
+
   await i18next
     .use(LanguageDetector)
     .init({
@@ -81,6 +86,7 @@ export async function initI18n(): Promise<void> {
       supportedLngs: [...SUPPORTED_LANGUAGES],
       nonExplicitSupportedLngs: true,
       fallbackLng: 'en',
+      lng: japanVariantDefault,
       debug: import.meta.env.DEV,
       interpolation: {
         escapeValue: false, // not needed for these simple strings

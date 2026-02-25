@@ -132,6 +132,22 @@ export const SOURCE_TIERS: Record<string, number> = {
   // Vietnamese
   'VnExpress': 2,
   'Tuoi Tre News': 2,
+  // Japanese
+  'Japan Times': 2,
+  '朝日新聞': 2,
+  '読売新聞': 2,
+  '毎日新聞': 2,
+  '産経新聞': 2,
+  '東洋経済': 3,
+  '日経新聞 経済': 2,
+  'Bloomberg Japan': 2,
+  'Reuters Japan': 1,
+  '気象庁 地震': 1,
+  '首相官邸': 1,
+  '外務省': 1,
+  'JSDF Watch': 2,
+  'South China Morning Post': 2,
+  'Asia Times': 3,
 
   // Tier 2 - Premium Startup/VC Sources
   'Y Combinator Blog': 2,
@@ -972,8 +988,112 @@ const FINANCE_FEEDS: Record<string, Feed[]> = {
   ],
 };
 
+// ============================================
+// JAPAN FEEDS (Japan Monitor variant)
+// ============================================
+const JAPAN_FEEDS: Record<string, Feed[]> = {
+  // Japanese national news - highest priority
+  japan_news: [
+    { name: 'NHK World', url: rss('https://www3.nhk.or.jp/nhkworld/en/news/rss_news.xml') },
+    { name: 'Japan Times', url: rss('https://www.japantimes.co.jp/feed/') },
+    { name: 'Reuters Japan', url: rss('https://news.google.com/rss/search?q=Japan+site:reuters.com+when:1d&hl=en-US&gl=US&ceid=US:en') },
+    { name: '朝日新聞', url: rss('https://news.google.com/rss/search?q=site:asahi.com+when:1d&hl=ja&gl=JP&ceid=JP:ja'), lang: 'ja' },
+    { name: '読売新聞', url: rss('https://news.google.com/rss/search?q=site:yomiuri.co.jp+when:1d&hl=ja&gl=JP&ceid=JP:ja'), lang: 'ja' },
+    { name: '毎日新聞', url: rss('https://news.google.com/rss/search?q=site:mainichi.jp+when:1d&hl=ja&gl=JP&ceid=JP:ja'), lang: 'ja' },
+    { name: '産経新聞', url: rss('https://news.google.com/rss/search?q=site:sankei.com+when:1d&hl=ja&gl=JP&ceid=JP:ja'), lang: 'ja' },
+  ],
+
+  // Japanese government / official
+  gov: [
+    { name: '首相官邸', url: rss('https://news.google.com/rss/search?q=site:kantei.go.jp+when:3d&hl=ja&gl=JP&ceid=JP:ja'), lang: 'ja' },
+    { name: '外務省', url: rss('https://news.google.com/rss/search?q=site:mofa.go.jp+when:3d&hl=en-US&gl=US&ceid=US:en') },
+    { name: 'White House', url: rss('https://www.whitehouse.gov/feed/') },
+    { name: 'State Dept', url: rss('https://www.state.gov/rss-feeds/press-releases/') },
+    { name: 'UN News', url: rss('https://news.un.org/feed/subscribe/en/news/all/rss.xml') },
+  ],
+
+  // Disaster / earthquake / typhoon / weather - critical for Japan
+  disaster: [
+    { name: '気象庁 地震', url: rss('https://news.google.com/rss/search?q=(地震+OR+震度+OR+緊急地震速報)+when:1d&hl=ja&gl=JP&ceid=JP:ja'), lang: 'ja' },
+    { name: 'Earthquake Japan', url: rss('https://news.google.com/rss/search?q=Japan+(earthquake+OR+typhoon+OR+tsunami+OR+eruption)+when:1d&hl=en-US&gl=US&ceid=US:en') },
+    { name: '台風・気象警報', url: rss('https://news.google.com/rss/search?q=(台風+OR+気象警報+OR+豪雨+OR+洪水)+when:1d&hl=ja&gl=JP&ceid=JP:ja'), lang: 'ja' },
+    { name: 'JMA Alerts', url: rss('https://news.google.com/rss/search?q=(JMA+OR+"Japan+Meteorological"+OR+"特別警報")+when:1d&hl=en-US&gl=US&ceid=US:en') },
+  ],
+
+  // Asia-Pacific geopolitics
+  asia: [
+    { name: 'Nikkei Asia', url: rss('https://news.google.com/rss/search?q=site:asia.nikkei.com+when:1d&hl=en-US&gl=US&ceid=US:en') },
+    { name: 'South China Morning Post', url: rss('https://www.scmp.com/rss/91/feed') },
+    { name: 'Asia Times', url: rss('https://asiatimes.com/feed/') },
+    { name: 'The Diplomat', url: rss('https://thediplomat.com/feed/') },
+    { name: 'NHK World Asia', url: rss('https://news.google.com/rss/search?q=Asia+site:nhk.or.jp+when:1d&hl=en-US&gl=US&ceid=US:en') },
+    { name: 'AP Asia', url: rss('https://news.google.com/rss/search?q=site:apnews.com+Asia+when:1d&hl=en-US&gl=US&ceid=US:en') },
+  ],
+
+  // Japan security / defense / geopolitical
+  security: [
+    { name: 'JSDF Watch', url: rss('https://news.google.com/rss/search?q=(Japan+defense+OR+JSDF+OR+"Self-Defense+Force"+OR+"防衛省")+when:2d&hl=en-US&gl=US&ceid=US:en') },
+    { name: '北朝鮮・台湾', url: rss('https://news.google.com/rss/search?q=(北朝鮮+OR+台湾+OR+尖閣+OR+安全保障)+when:2d&hl=ja&gl=JP&ceid=JP:ja'), lang: 'ja' },
+    { name: 'Taiwan Strait', url: rss('https://news.google.com/rss/search?q=(Taiwan+strait+OR+Senkaku+OR+"China+Japan"+tension)+when:2d&hl=en-US&gl=US&ceid=US:en') },
+    { name: 'North Korea', url: rss('https://news.google.com/rss/search?q=("North+Korea"+missile+OR+nuclear+Japan)+when:2d&hl=en-US&gl=US&ceid=US:en') },
+    { name: 'Defense One', url: rss('https://www.defenseone.com/rss/all/') },
+  ],
+
+  // Japan economy / markets
+  markets: [
+    { name: '日経新聞 経済', url: rss('https://news.google.com/rss/search?q=site:nikkei.com+(経済+OR+株+OR+円)+when:1d&hl=ja&gl=JP&ceid=JP:ja'), lang: 'ja' },
+    { name: 'Bloomberg Japan', url: rss('https://news.google.com/rss/search?q=site:bloomberg.co.jp+when:1d&hl=ja&gl=JP&ceid=JP:ja'), lang: 'ja' },
+    { name: '東洋経済', url: rss('https://news.google.com/rss/search?q=site:toyokeizai.net+when:1d&hl=ja&gl=JP&ceid=JP:ja'), lang: 'ja' },
+    { name: 'Japan Finance', url: rss('https://news.google.com/rss/search?q=(Japan+economy+OR+"yen+dollar"+OR+"Bank+of+Japan"+OR+Nikkei+index)+when:1d&hl=en-US&gl=US&ceid=US:en') },
+    { name: 'CNBC', url: rss('https://www.cnbc.com/id/100003114/device/rss/rss.html') },
+    { name: 'Reuters Markets', url: rss('https://news.google.com/rss/search?q=site:reuters.com+markets+when:1d&hl=en-US&gl=US&ceid=US:en') },
+  ],
+
+  // Japan technology / semiconductors
+  tech: [
+    { name: 'Japan Tech', url: rss('https://news.google.com/rss/search?q=(Japan+technology+OR+semiconductor+OR+Sony+OR+Toyota+EV+OR+SoftBank+AI)+when:2d&hl=en-US&gl=US&ceid=US:en') },
+    { name: '半導体・AI', url: rss('https://news.google.com/rss/search?q=(半導体+OR+AIチップ+OR+TSMC+Japan+OR+ラピダス)+when:2d&hl=ja&gl=JP&ceid=JP:ja'), lang: 'ja' },
+    { name: 'The Bridge', url: rss('https://news.google.com/rss/search?q=site:thebridge.jp+when:3d&hl=ja&gl=JP&ceid=JP:ja'), lang: 'ja' },
+    { name: 'Nikkei Tech', url: rss('https://news.google.com/rss/search?q=site:xtech.nikkei.com+when:2d&hl=ja&gl=JP&ceid=JP:ja'), lang: 'ja' },
+  ],
+
+  // Energy / nuclear power - critical for Japan
+  energy: [
+    { name: 'Japan Energy', url: rss('https://news.google.com/rss/search?q=(Japan+energy+OR+"nuclear+power"+Japan+OR+TEPCO+OR+再生可能エネルギー)+when:3d&hl=en-US&gl=US&ceid=US:en') },
+    { name: '原発・エネルギー', url: rss('https://news.google.com/rss/search?q=(原発+OR+原子力+OR+再エネ+OR+電力不足)+when:3d&hl=ja&gl=JP&ceid=JP:ja'), lang: 'ja' },
+    { name: 'Reuters Energy', url: rss('https://news.google.com/rss/search?q=site:reuters.com+energy+when:2d&hl=en-US&gl=US&ceid=US:en') },
+  ],
+
+  // Global world news (international context)
+  politics: [
+    { name: 'BBC World', url: rss('https://feeds.bbci.co.uk/news/world/rss.xml') },
+    { name: 'Reuters World', url: rss('https://news.google.com/rss/search?q=site:reuters.com+world+when:1d&hl=en-US&gl=US&ceid=US:en') },
+    { name: 'AP News', url: rss('https://news.google.com/rss/search?q=site:apnews.com+when:1d&hl=en-US&gl=US&ceid=US:en') },
+    { name: 'CNN World', url: rss('http://rss.cnn.com/rss/cnn_world.rss') },
+  ],
+
+  // Finance / global markets
+  finance: [
+    { name: 'Bloomberg', url: rss('https://news.google.com/rss/search?q=site:bloomberg.com+markets+when:1d&hl=en-US&gl=US&ceid=US:en') },
+    { name: 'Financial Times', url: rss('https://news.google.com/rss/search?q=site:ft.com+when:1d&hl=en-US&gl=US&ceid=US:en') },
+  ],
+
+  // Crypto
+  crypto: [
+    { name: 'Japan Crypto', url: rss('https://news.google.com/rss/search?q=(Japan+crypto+OR+"仮想通貨"+OR+FSA+crypto)+when:3d&hl=en-US&gl=US&ceid=US:en') },
+    { name: 'CoinDesk', url: rss('https://www.coindesk.com/arc/outboundfeeds/rss/') },
+  ],
+
+  // Think tanks / analysis
+  thinktanks: [
+    { name: 'CSIS Japan', url: rss('https://news.google.com/rss/search?q=site:csis.org+Japan+when:7d&hl=en-US&gl=US&ceid=US:en') },
+    { name: 'Stimson Japan', url: rss('https://news.google.com/rss/search?q=site:stimson.org+Japan+when:7d&hl=en-US&gl=US&ceid=US:en') },
+    { name: 'RAND Japan', url: rss('https://news.google.com/rss/search?q=site:rand.org+Japan+when:14d&hl=en-US&gl=US&ceid=US:en') },
+  ],
+};
+
 // Variant-aware exports
-export const FEEDS = SITE_VARIANT === 'tech' ? TECH_FEEDS : SITE_VARIANT === 'finance' ? FINANCE_FEEDS : FULL_FEEDS;
+export const FEEDS = SITE_VARIANT === 'tech' ? TECH_FEEDS : SITE_VARIANT === 'finance' ? FINANCE_FEEDS : SITE_VARIANT === 'japan' ? JAPAN_FEEDS : FULL_FEEDS;
 
 export const SOURCE_REGION_MAP: Record<string, { labelKey: string; feedKeys: string[] }> = {
   // Full (geopolitical) variant regions

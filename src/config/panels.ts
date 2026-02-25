@@ -371,11 +371,125 @@ const FINANCE_MOBILE_MAP_LAYERS: MapLayers = {
 };
 
 // ============================================
+// JAPAN VARIANT (Japan Monitor)
+// ============================================
+const JAPAN_PANELS: Record<string, PanelConfig> = {
+  map: { name: '日本地図', enabled: true, priority: 1 },
+  'live-news': { name: 'ライブニュース', enabled: true, priority: 1 },
+  insights: { name: 'AI インサイト', enabled: true, priority: 1 },
+  japan_news: { name: '日本ニュース', enabled: true, priority: 1 },
+  disaster: { name: '災害・地震情報', enabled: true, priority: 1 },
+  asia: { name: 'アジア・太平洋', enabled: true, priority: 1 },
+  security: { name: '安全保障・防衛', enabled: true, priority: 1 },
+  markets: { name: '日本・国際市場', enabled: true, priority: 1 },
+  cii: { name: '国別不安定指数', enabled: true, priority: 1 },
+  'strategic-risk': { name: '戦略的リスク', enabled: true, priority: 1 },
+  cascade: { name: 'インフラ連鎖', enabled: true, priority: 1 },
+  'gdelt-intel': { name: 'ライブインテリジェンス', enabled: true, priority: 1 },
+  energy: { name: 'エネルギー・原発', enabled: true, priority: 1 },
+  gov: { name: '政府・官公庁', enabled: true, priority: 1 },
+  tech: { name: 'テクノロジー', enabled: true, priority: 1 },
+  politics: { name: '国際情勢', enabled: true, priority: 2 },
+  thinktanks: { name: 'シンクタンク', enabled: true, priority: 2 },
+  finance: { name: '金融・経済', enabled: true, priority: 2 },
+  economic: { name: '経済指標', enabled: true, priority: 2 },
+  commodities: { name: 'コモディティ', enabled: true, priority: 2 },
+  crypto: { name: '暗号通貨', enabled: true, priority: 2 },
+  heatmap: { name: 'セクターヒートマップ', enabled: true, priority: 2 },
+  polymarket: { name: '予測市場', enabled: true, priority: 2 },
+  'satellite-fires': { name: '山火事', enabled: true, priority: 2 },
+  'macro-signals': { name: 'マーケットレーダー', enabled: true, priority: 2 },
+  monitors: { name: 'マイモニター', enabled: true, priority: 2 },
+};
+
+const JAPAN_MAP_LAYERS: MapLayers = {
+  conflicts: false,
+  bases: false,
+  cables: true,
+  pipelines: false,
+  hotspots: false,
+  ais: false,
+  nuclear: true,
+  irradiators: false,
+  sanctions: false,
+  weather: true,
+  economic: true,
+  waterways: true,
+  outages: true,
+  cyberThreats: false,
+  datacenters: false,
+  protests: false,
+  flights: false,
+  military: false,
+  natural: true,
+  spaceports: false,
+  minerals: false,
+  fires: true,
+  // Data source layers
+  ucdpEvents: false,
+  displacement: false,
+  climate: false,
+  // Tech layers (disabled in japan variant)
+  startupHubs: false,
+  cloudRegions: false,
+  accelerators: false,
+  techHQs: false,
+  techEvents: false,
+  // Finance layers (disabled in japan variant)
+  stockExchanges: false,
+  financialCenters: false,
+  centralBanks: false,
+  commodityHubs: false,
+  gulfInvestments: false,
+};
+
+const JAPAN_MOBILE_MAP_LAYERS: MapLayers = {
+  conflicts: false,
+  bases: false,
+  cables: false,
+  pipelines: false,
+  hotspots: false,
+  ais: false,
+  nuclear: false,
+  irradiators: false,
+  sanctions: false,
+  weather: true,
+  economic: false,
+  waterways: false,
+  outages: true,
+  cyberThreats: false,
+  datacenters: false,
+  protests: false,
+  flights: false,
+  military: false,
+  natural: true,
+  spaceports: false,
+  minerals: false,
+  fires: true,
+  // Data source layers
+  ucdpEvents: false,
+  displacement: false,
+  climate: false,
+  // Tech layers (disabled)
+  startupHubs: false,
+  cloudRegions: false,
+  accelerators: false,
+  techHQs: false,
+  techEvents: false,
+  // Finance layers (disabled)
+  stockExchanges: false,
+  financialCenters: false,
+  centralBanks: false,
+  commodityHubs: false,
+  gulfInvestments: false,
+};
+
+// ============================================
 // VARIANT-AWARE EXPORTS
 // ============================================
-export const DEFAULT_PANELS = SITE_VARIANT === 'tech' ? TECH_PANELS : SITE_VARIANT === 'finance' ? FINANCE_PANELS : FULL_PANELS;
-export const DEFAULT_MAP_LAYERS = SITE_VARIANT === 'tech' ? TECH_MAP_LAYERS : SITE_VARIANT === 'finance' ? FINANCE_MAP_LAYERS : FULL_MAP_LAYERS;
-export const MOBILE_DEFAULT_MAP_LAYERS = SITE_VARIANT === 'tech' ? TECH_MOBILE_MAP_LAYERS : SITE_VARIANT === 'finance' ? FINANCE_MOBILE_MAP_LAYERS : FULL_MOBILE_MAP_LAYERS;
+export const DEFAULT_PANELS = SITE_VARIANT === 'tech' ? TECH_PANELS : SITE_VARIANT === 'finance' ? FINANCE_PANELS : SITE_VARIANT === 'japan' ? JAPAN_PANELS : FULL_PANELS;
+export const DEFAULT_MAP_LAYERS = SITE_VARIANT === 'tech' ? TECH_MAP_LAYERS : SITE_VARIANT === 'finance' ? FINANCE_MAP_LAYERS : SITE_VARIANT === 'japan' ? JAPAN_MAP_LAYERS : FULL_MAP_LAYERS;
+export const MOBILE_DEFAULT_MAP_LAYERS = SITE_VARIANT === 'tech' ? TECH_MOBILE_MAP_LAYERS : SITE_VARIANT === 'finance' ? FINANCE_MOBILE_MAP_LAYERS : SITE_VARIANT === 'japan' ? JAPAN_MOBILE_MAP_LAYERS : FULL_MOBILE_MAP_LAYERS;
 
 /** Maps map-layer toggle keys to their data-freshness source IDs (single source of truth). */
 export const LAYER_TO_SOURCE: Partial<Record<keyof MapLayers, DataSourceId[]>> = {
@@ -489,6 +603,28 @@ export const PANEL_CATEGORY_MAP: Record<string, { labelKey: string; panelKeys: s
     labelKey: 'header.panelCatGulfMena',
     panelKeys: ['gcc-investments', 'gccNews', 'monitors'],
     variants: ['finance'],
+  },
+
+  // Japan variant
+  japanCore: {
+    labelKey: 'header.panelCatJapanCore',
+    panelKeys: ['japan_news', 'disaster', 'gov'],
+    variants: ['japan'],
+  },
+  japanGeopolitics: {
+    labelKey: 'header.panelCatJapanGeopolitics',
+    panelKeys: ['asia', 'security', 'cii', 'strategic-risk', 'gdelt-intel', 'cascade'],
+    variants: ['japan'],
+  },
+  japanEconomy: {
+    labelKey: 'header.panelCatJapanEconomy',
+    panelKeys: ['markets', 'economic', 'finance', 'commodities', 'energy', 'heatmap', 'macro-signals'],
+    variants: ['japan'],
+  },
+  japanTech: {
+    labelKey: 'header.panelCatJapanTech',
+    panelKeys: ['tech', 'thinktanks', 'crypto', 'polymarket', 'satellite-fires', 'monitors'],
+    variants: ['japan'],
   },
 };
 

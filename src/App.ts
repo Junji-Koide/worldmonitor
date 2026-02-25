@@ -1852,6 +1852,15 @@ export class App {
                title="${t('header.finance')}${SITE_VARIANT === 'finance' ? ` ${t('common.currentVariant')}` : ''}">
               <span class="variant-icon">📈</span>
               <span class="variant-label">${t('header.finance')}</span>
+            </a>
+            <span class="variant-divider"></span>
+            <a href="${vHref('japan', 'https://japan.worldmonitor.app')}"
+               class="variant-option ${SITE_VARIANT === 'japan' ? 'active' : ''}"
+               data-variant="japan"
+               ${vTarget('japan')}
+               title="${t('header.japan')}${SITE_VARIANT === 'japan' ? ` ${t('common.currentVariant')}` : ''}">
+              <span class="variant-icon">🗾</span>
+              <span class="variant-label">${t('header.japan')}</span>
             </a>`;
           })()}</div>
           <span class="logo">MONITOR</span><span class="version">v${__APP_VERSION__}</span>${BETA_MODE ? '<span class="beta-badge">BETA</span>' : ''}
@@ -2073,9 +2082,9 @@ export class App {
     // Uses deck.gl (WebGL) on desktop, falls back to D3/SVG on mobile
     const mapContainer = document.getElementById('mapContainer') as HTMLElement;
     this.map = new MapContainer(mapContainer, {
-      zoom: this.isMobile ? 2.5 : 1.0,
+      zoom: SITE_VARIANT === 'japan' ? (this.isMobile ? 3.5 : 5) : (this.isMobile ? 2.5 : 1.0),
       pan: { x: 0, y: 0 },  // Centered view to show full world
-      view: this.isMobile ? 'mena' : 'global',
+      view: SITE_VARIANT === 'japan' ? 'japan' : (this.isMobile ? 'mena' : 'global'),
       layers: this.mapLayers,
       timeRange: '7d',
     });
@@ -2265,7 +2274,7 @@ export class App {
     }
 
     // Geopolitical-only panels (not needed for tech variant)
-    if (SITE_VARIANT === 'full') {
+    if (SITE_VARIANT === 'full' || SITE_VARIANT === 'japan') {
       const gdeltIntelPanel = new GdeltIntelPanel();
       this.panels['gdelt-intel'] = gdeltIntelPanel;
 
@@ -3036,14 +3045,14 @@ export class App {
 
     // Load intelligence signals for CII calculation (protests, military, outages)
     // Only for geopolitical variant - tech variant doesn't need CII/focal points
-    if (SITE_VARIANT === 'full') {
+    if (SITE_VARIANT === 'full' || SITE_VARIANT === 'japan') {
       tasks.push({ name: 'intelligence', task: runGuarded('intelligence', () => this.loadIntelligenceSignals()) });
     }
 
     // Conditionally load non-intelligence layers
     // NOTE: outages, protests, military are handled by loadIntelligenceSignals() above
     // They update the map when layers are enabled, so no duplicate tasks needed here
-    if (SITE_VARIANT === 'full') tasks.push({ name: 'firms', task: runGuarded('firms', () => this.loadFirmsData()) });
+    if (SITE_VARIANT === 'full' || SITE_VARIANT === 'japan') tasks.push({ name: 'firms', task: runGuarded('firms', () => this.loadFirmsData()) });
     if (this.mapLayers.natural) tasks.push({ name: 'natural', task: runGuarded('natural', () => this.loadNatural()) });
     if (this.mapLayers.weather) tasks.push({ name: 'weather', task: runGuarded('weather', () => this.loadWeatherAlerts()) });
     if (this.mapLayers.ais) tasks.push({ name: 'ais', task: runGuarded('ais', () => this.loadAisSignals()) });
@@ -3361,7 +3370,7 @@ export class App {
     });
 
     // Intel (uses different source) - full variant only (defense/military news)
-    if (SITE_VARIANT === 'full') {
+    if (SITE_VARIANT === 'full' || SITE_VARIANT === 'japan') {
       const enabledIntelSources = INTEL_SOURCES.filter(f => !this.disabledSources.has(f.name));
       const intelPanel = this.newsPanels['intel'];
       if (enabledIntelSources.length === 0) {
@@ -4535,7 +4544,7 @@ export class App {
 
     // Refresh intelligence signals for CII (geopolitical variant only)
     // This handles outages, protests, military - updates map when layers enabled
-    if (SITE_VARIANT === 'full') {
+    if (SITE_VARIANT === 'full' || SITE_VARIANT === 'japan') {
       this.scheduleRefresh('intelligence', () => {
         this.intelligenceCache = {}; // Clear cache to force fresh fetch
         return this.loadIntelligenceSignals();

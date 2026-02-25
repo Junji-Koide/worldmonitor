@@ -122,6 +122,29 @@ const VARIANT_META: Record<string, {
       'Market radar signals',
     ],
   },
+  japan: {
+    title: 'Japan Monitor - リアルタイム日本インテリジェンスダッシュボード',
+    description: 'リアルタイムの日本語ダッシュボード。地震・台風・国内外ニュース・市場データ・安全保障情報を一画面で監視。',
+    keywords: 'Japan monitor, 日本ダッシュボード, 地震情報, 台風, 日本ニュース, 日経平均, 安全保障, OSINT, インテリジェンス, アジア, Japan intelligence dashboard',
+    url: 'https://japan.worldmonitor.app/',
+    siteName: 'Japan Monitor',
+    shortName: 'JapanMonitor',
+    subject: 'リアルタイム日本情勢・インテリジェンスダッシュボード',
+    classification: 'Intelligence Dashboard, OSINT Tool, Japan News Aggregator',
+    categories: ['news', 'productivity'],
+    features: [
+      'リアルタイム日本語ニュース',
+      '地震・気象・災害アラート',
+      'アジア太平洋地政学情報',
+      '安全保障・防衛ニュース',
+      '日本市場データ（日経・TOPIX・円）',
+      'インフラ・原発監視',
+      '衛星火災追跡',
+      'AI インサイト（日本語）',
+      '予測市場',
+      '国別不安定指数',
+    ],
+  },
 };
 
 const activeVariant = process.env.VITE_VARIANT || 'full';

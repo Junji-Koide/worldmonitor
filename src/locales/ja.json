@@ -89,6 +89,7 @@
     "filterSources": "ソースを絞り込み...",
     "sourcesEnabled": "{{enabled}}/{{total}} 有効",
     "finance": "金融",
+    "japan": "日本",
     "toggleTheme": "ダーク/ライトモード切替",
     "panelDisplayCaption": "ダッシュボードに表示するパネルを選択",
     "tabGeneral": "一般",
@@ -137,7 +138,11 @@
     "panelCatCryptoDigital": "暗号通貨・デジタル",
     "panelCatCentralBanks": "中央銀行・経済",
     "panelCatDeals": "ディール・機関投資",
-    "panelCatGulfMena": "湾岸・中東"
+    "panelCatGulfMena": "湾岸・中東",
+    "panelCatJapanCore": "日本ニュース",
+    "panelCatJapanGeopolitics": "地政学・安全保障",
+    "panelCatJapanEconomy": "経済・市場",
+    "panelCatJapanTech": "テクノロジー・その他"
   },
   "panels": {
     "liveNews": "ライブニュース",
@@ -714,7 +719,8 @@
         "asia": "アジア",
         "latam": "中南米",
         "africa": "アフリカ",
-        "oceania": "オセアニア"
+        "oceania": "オセアニア",
+        "japan": "日本"
       },
       "layers": {
         "startupHubs": "スタートアップハブ",

@@ -89,6 +89,7 @@
     "filterSources": "Filter sources...",
     "sourcesEnabled": "{{enabled}}/{{total}} enabled",
     "finance": "FINANCE",
+    "japan": "JAPAN",
     "toggleTheme": "Toggle dark/light mode",
     "panelDisplayCaption": "Choose which panels to show on the dashboard",
     "tabGeneral": "General",
@@ -137,7 +138,11 @@
     "panelCatCryptoDigital": "Crypto & Digital",
     "panelCatCentralBanks": "Central Banks & Econ",
     "panelCatDeals": "Deals & Institutional",
-    "panelCatGulfMena": "Gulf & MENA"
+    "panelCatGulfMena": "Gulf & MENA",
+    "panelCatJapanCore": "Japan News",
+    "panelCatJapanGeopolitics": "Geopolitics & Security",
+    "panelCatJapanEconomy": "Economy & Markets",
+    "panelCatJapanTech": "Technology & More"
   },
   "panels": {
     "liveNews": "Live News",
@@ -742,7 +747,8 @@
         "asia": "Asia",
         "latam": "Latin America",
         "africa": "Africa",
-        "oceania": "Oceania"
+        "oceania": "Oceania",
+        "japan": "Japan"
       },
       "layers": {
         "startupHubs": "Startup Hubs",
