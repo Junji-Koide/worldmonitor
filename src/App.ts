@@ -3033,47 +3033,78 @@ export class App {
       }
     };
 
-    const tasks: Array<{ name: string; task: Promise<void> }> = [
+    // --- P1: Critical — most user-visible data (immediate) ---
+    const p1Tasks: Array<{ name: string; task: Promise<void> }> = [
       { name: 'news', task: runGuarded('news', () => this.loadNews()) },
       { name: 'markets', task: runGuarded('markets', () => this.loadMarkets()) },
-      { name: 'predictions', task: runGuarded('predictions', () => this.loadPredictions()) },
-      { name: 'pizzint', task: runGuarded('pizzint', () => this.loadPizzInt()) },
-      { name: 'fred', task: runGuarded('fred', () => this.loadFredData()) },
-      { name: 'oil', task: runGuarded('oil', () => this.loadOilAnalytics()) },
-      { name: 'spending', task: runGuarded('spending', () => this.loadGovernmentSpending()) },
     ];
-
-    // Load intelligence signals for CII calculation (protests, military, outages)
-    // Only for geopolitical variant - tech variant doesn't need CII/focal points
     if (SITE_VARIANT === 'full' || SITE_VARIANT === 'japan') {
-      tasks.push({ name: 'intelligence', task: runGuarded('intelligence', () => this.loadIntelligenceSignals()) });
+      p1Tasks.push({ name: 'intelligence', task: runGuarded('intelligence', () => this.loadIntelligenceSignals()) });
     }
 
-    // Conditionally load non-intelligence layers
-    // NOTE: outages, protests, military are handled by loadIntelligenceSignals() above
-    // They update the map when layers are enabled, so no duplicate tasks needed here
-    if (SITE_VARIANT === 'full' || SITE_VARIANT === 'japan') tasks.push({ name: 'firms', task: runGuarded('firms', () => this.loadFirmsData()) });
-    if (this.mapLayers.natural) tasks.push({ name: 'natural', task: runGuarded('natural', () => this.loadNatural()) });
-    if (this.mapLayers.weather) tasks.push({ name: 'weather', task: runGuarded('weather', () => this.loadWeatherAlerts()) });
-    if (this.mapLayers.ais) tasks.push({ name: 'ais', task: runGuarded('ais', () => this.loadAisSignals()) });
-    if (this.mapLayers.cables) tasks.push({ name: 'cables', task: runGuarded('cables', () => this.loadCableActivity()) });
-    if (this.mapLayers.cables) tasks.push({ name: 'cableHealth', task: runGuarded('cableHealth', () => this.loadCableHealth()) });
-    if (this.mapLayers.flights) tasks.push({ name: 'flights', task: runGuarded('flights', () => this.loadFlightDelays()) });
-    if (CYBER_LAYER_ENABLED && this.mapLayers.cyberThreats) tasks.push({ name: 'cyberThreats', task: runGuarded('cyberThreats', () => this.loadCyberThreats()) });
-    if (this.mapLayers.techEvents || SITE_VARIANT === 'tech') tasks.push({ name: 'techEvents', task: runGuarded('techEvents', () => this.loadTechEvents()) });
+    // --- P2: Important — supplemental data (after P1 or 500ms) ---
+    const launchP2 = (): Array<{ name: string; task: Promise<void> }> => {
+      const tasks: Array<{ name: string; task: Promise<void> }> = [
+        { name: 'predictions', task: runGuarded('predictions', () => this.loadPredictions()) },
+        { name: 'fred', task: runGuarded('fred', () => this.loadFredData()) },
+        { name: 'oil', task: runGuarded('oil', () => this.loadOilAnalytics()) },
+      ];
+      if (SITE_VARIANT === 'full' || SITE_VARIANT === 'japan') {
+        tasks.push({ name: 'firms', task: runGuarded('firms', () => this.loadFirmsData()) });
+      }
+      if (this.mapLayers.natural) {
+        tasks.push({ name: 'natural', task: runGuarded('natural', () => this.loadNatural()) });
+      }
+      if (this.mapLayers.weather) {
+        tasks.push({ name: 'weather', task: runGuarded('weather', () => this.loadWeatherAlerts()) });
+      }
+      return tasks;
+    };
 
-    // Tech Readiness panel (tech variant only)
-    if (SITE_VARIANT === 'tech') {
-      tasks.push({ name: 'techReadiness', task: runGuarded('techReadiness', () => (this.panels['tech-readiness'] as TechReadinessPanel)?.refresh()) });
-    }
+    // --- P3: Low priority — remaining feeds (after P2 or 1500ms) ---
+    const launchP3 = (): Array<{ name: string; task: Promise<void> }> => {
+      const tasks: Array<{ name: string; task: Promise<void> }> = [
+        { name: 'pizzint', task: runGuarded('pizzint', () => this.loadPizzInt()) },
+        { name: 'spending', task: runGuarded('spending', () => this.loadGovernmentSpending()) },
+      ];
+      if (this.mapLayers.ais) tasks.push({ name: 'ais', task: runGuarded('ais', () => this.loadAisSignals()) });
+      if (this.mapLayers.cables) tasks.push({ name: 'cables', task: runGuarded('cables', () => this.loadCableActivity()) });
+      if (this.mapLayers.cables) tasks.push({ name: 'cableHealth', task: runGuarded('cableHealth', () => this.loadCableHealth()) });
+      if (this.mapLayers.flights) tasks.push({ name: 'flights', task: runGuarded('flights', () => this.loadFlightDelays()) });
+      if (CYBER_LAYER_ENABLED && this.mapLayers.cyberThreats) tasks.push({ name: 'cyberThreats', task: runGuarded('cyberThreats', () => this.loadCyberThreats()) });
+      if (this.mapLayers.techEvents || SITE_VARIANT === 'tech') tasks.push({ name: 'techEvents', task: runGuarded('techEvents', () => this.loadTechEvents()) });
+      if (SITE_VARIANT === 'tech') {
+        tasks.push({ name: 'techReadiness', task: runGuarded('techReadiness', () => (this.panels['tech-readiness'] as TechReadinessPanel)?.refresh()) });
+      }
+      return tasks;
+    };
 
-    // Use allSettled to ensure all tasks complete and search index always updates
-    const results = await Promise.allSettled(tasks.map(t => t.task));
+    // Launch P1 immediately
+    const p1Promise = Promise.allSettled(p1Tasks.map(t => t.task));
 
-    // Log any failures but don't block
-    results.forEach((result, idx) => {
+    // Launch P2 when P1 settles or after 500ms (whichever is first)
+    let p2Tasks: Array<{ name: string; task: Promise<void> }> = [];
+    const p2Promise = Promise.race([p1Promise, new Promise<void>(r => setTimeout(r, 500))]).then(() => {
+      p2Tasks = launchP2();
+      return Promise.allSettled(p2Tasks.map(t => t.task));
+    });
+
+    // Launch P3 when P2 settles or after 1500ms from start
+    let p3Tasks: Array<{ name: string; task: Promise<void> }> = [];
+    const p3Promise = Promise.race([p2Promise, new Promise<void>(r => setTimeout(r, 1500))]).then(() => {
+      p3Tasks = launchP3();
+      return Promise.allSettled(p3Tasks.map(t => t.task));
+    });
+
+    // Wait for all tiers to complete
+    const [p1Results, p2Results, p3Results] = await Promise.all([p1Promise, p2Promise, p3Promise]);
+
+    // Log any failures
+    const allTasks = [...p1Tasks, ...p2Tasks, ...p3Tasks];
+    const allResults = [...(p1Results || []), ...(p2Results || []), ...(p3Results || [])];
+    allResults.forEach((result, idx) => {
       if (result.status === 'rejected') {
-        console.error(`[App] ${tasks[idx]?.name} load failed:`, result.reason);
+        console.error(`[App] ${allTasks[idx]?.name} load failed:`, result.reason);
       }
     });
 
