@@ -46,6 +46,16 @@
       "headers": [
         { "key": "Cache-Control", "value": "public, max-age=86400" }
       ]
+    },
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "X-Frame-Options", "value": "DENY" },
+        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
+        { "key": "Permissions-Policy", "value": "camera=(), microphone=(), geolocation=()" },
+        { "key": "Content-Security-Policy-Report-Only", "value": "default-src 'self'; script-src 'self' 'wasm-unsafe-eval' https://cdn.vercel-insights.com https://browser.sentry-cdn.com; connect-src 'self' https://*.worldmonitor.app https://*.koide.io https://us.i.posthog.com https://us-assets.i.posthog.com https://*.sentry.io https://*.upstash.io https://basemaps.cartocdn.com https://api.maptiler.com wss://*.worldmonitor.app; img-src 'self' data: blob: https:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; worker-src 'self' blob:; child-src blob:" }
+      ]
     }
   ]
 }
