@@ -6,9 +6,6 @@
 import { detectMLCapabilities, type MLCapabilities } from './ml-capabilities';
 import { ML_THRESHOLDS, MODEL_CONFIGS } from '@/config/ml-config';
 
-// Import worker using Vite's worker syntax
-import MLWorkerClass from '@/workers/ml.worker?worker';
-
 interface PendingRequest<T> {
   resolve: (value: T) => void;
   reject: (error: Error) => void;
@@ -72,8 +69,17 @@ class MLWorkerManager {
     return this.initWorker();
   }
 
-  private initWorker(): Promise<boolean> {
-    if (this.worker) return Promise.resolve(this.isReady);
+  private async initWorker(): Promise<boolean> {
+    if (this.worker) return this.isReady;
+
+    // Dynamic import: defers the ~700KB+ ML/WASM bundle until actually needed
+    let MLWorkerClass: new () => Worker;
+    try {
+      ({ default: MLWorkerClass } = await import('@/workers/ml.worker?worker'));
+    } catch (error) {
+      console.error('[MLWorker] Failed to load worker module:', error);
+      return false;
+    }
 
     return new Promise((resolve) => {
       const readyTimeout = setTimeout(() => {
