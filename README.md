@@ -159,14 +159,9 @@ P3 (P2完了 or 1500ms後): その他フィード
 | API 優先度化 | P1/P2/P3 の 3 段階で重要データを先行取得 |
 | セキュリティヘッダー | CSP (report-only), X-Frame-Options, Referrer-Policy |
 | 共通レート制限 | `api/_rate-limit.js` でエンドポイント横断管理 |
-
-### パフォーマンス最適化 (実装予定)
-
-| 最適化 | 対象 | 詳細 |
-|--------|------|------|
-| `filterByTime()` メモ化 | `DeckGLMap.ts` | 11 箇所の呼び出しをキャッシュ化 |
-| Zoom bailout | `DeckGLMap.ts` | 非表示レイヤーのデータ処理をスキップ |
-| Ghost レイヤー条件生成 | `DeckGLMap.ts` | zoom < 3 でヒット検出レイヤーをスキップ |
+| `filterByTimeCached()` | 配列参照 + timeRange でキャッシュ。pan/zoom の O(n) スキャンを O(1) に削減 |
+| Zoom bailout | `mapLayers.X` ブロック内でフィルタを遅延評価。無効レイヤーの処理を完全スキップ |
+| Ghost レイヤー条件生成 | zoom < 3 でヒット検出レイヤーをスキップ (`shouldCreateGhostLayer()`) |
 
 設計詳細: [`docs/plans/2026-02-26-performance-security-design.md`](docs/plans/2026-02-26-performance-security-design.md)
 
