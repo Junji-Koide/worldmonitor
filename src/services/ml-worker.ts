@@ -49,6 +49,7 @@ class MLWorkerManager {
   private loadedModels = new Set<string>();
   private readyResolve: (() => void) | null = null;
   private modelProgressCallbacks: Map<string, (progress: number) => void> = new Map();
+  private initPromise: Promise<boolean> | null = null;
 
   private static readonly READY_TIMEOUT_MS = 10000;
 
@@ -69,7 +70,13 @@ class MLWorkerManager {
     return this.initWorker();
   }
 
-  private async initWorker(): Promise<boolean> {
+  private initWorker(): Promise<boolean> {
+    if (this.initPromise) return this.initPromise;
+    this.initPromise = this._doInitWorker();
+    return this.initPromise;
+  }
+
+  private async _doInitWorker(): Promise<boolean> {
     if (this.worker) return this.isReady;
 
     // Dynamic import: defers the ~700KB+ ML/WASM bundle until actually needed
@@ -78,6 +85,7 @@ class MLWorkerManager {
       ({ default: MLWorkerClass } = await import('@/workers/ml.worker?worker'));
     } catch (error) {
       console.error('[MLWorker] Failed to load worker module:', error);
+      this.initPromise = null;
       return false;
     }
 
@@ -85,6 +93,7 @@ class MLWorkerManager {
       const readyTimeout = setTimeout(() => {
         if (!this.isReady) {
           console.error('[MLWorker] Worker failed to become ready');
+          this.initPromise = null;
           this.cleanup();
           resolve(false);
         }
@@ -94,6 +103,8 @@ class MLWorkerManager {
         this.worker = new MLWorkerClass();
       } catch (error) {
         console.error('[MLWorker] Failed to create worker:', error);
+        clearTimeout(readyTimeout);
+        this.initPromise = null;
         this.cleanup();
         resolve(false);
         return;
@@ -168,6 +179,7 @@ class MLWorkerManager {
 
         if (!this.isReady) {
           clearTimeout(readyTimeout);
+          this.initPromise = null;
           this.cleanup();
           resolve(false);
           return;
@@ -188,6 +200,7 @@ class MLWorkerManager {
       this.worker = null;
     }
     this.isReady = false;
+    this.initPromise = null;
     this.pendingRequests.clear();
     this.loadedModels.clear();
   }
