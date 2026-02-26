@@ -1,5 +1,6 @@
 // Non-sebuf: returns XML/HTML, stays as standalone Vercel function
 import { getCorsHeaders, isDisallowedOrigin } from './_cors.js';
+import { checkRateLimit, getClientIp } from './_rate-limit.js';
 
 export const config = { runtime: 'edge' };
 
@@ -245,6 +246,15 @@ const ALLOWED_DOMAINS = [
 ];
 
 export default async function handler(req) {
+  const ip = getClientIp(req);
+  const { limited, retryAfter } = checkRateLimit(ip, { limit: 60, windowMs: 60_000 });
+  if (limited) {
+    return new Response(JSON.stringify({ error: 'Too many requests' }), {
+      status: 429,
+      headers: { 'Content-Type': 'application/json', 'Retry-After': String(retryAfter) },
+    });
+  }
+
   const corsHeaders = getCorsHeaders(req, 'GET, OPTIONS');
 
   // Handle CORS preflight

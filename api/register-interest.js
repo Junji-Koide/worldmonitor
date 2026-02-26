@@ -2,24 +2,10 @@ export const config = { runtime: 'edge' };
 
 import { ConvexHttpClient } from 'convex/browser';
 import { getCorsHeaders, isDisallowedOrigin } from './_cors.js';
+import { checkRateLimit, getClientIp } from './_rate-limit.js';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MAX_EMAIL_LENGTH = 320;
-
-const rateLimitMap = new Map();
-const RATE_LIMIT = 5;
-const RATE_WINDOW_MS = 60 * 60 * 1000;
-
-function isRateLimited(ip) {
-  const now = Date.now();
-  const entry = rateLimitMap.get(ip);
-  if (!entry || now - entry.windowStart > RATE_WINDOW_MS) {
-    rateLimitMap.set(ip, { windowStart: now, count: 1 });
-    return false;
-  }
-  entry.count += 1;
-  return entry.count > RATE_LIMIT;
-}
 
 export default async function handler(req) {
   if (isDisallowedOrigin(req)) {
@@ -42,9 +28,10 @@ export default async function handler(req) {
     });
   }
 
-  const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
-  if (isRateLimited(ip)) {
-    return new Response(JSON.stringify({ error: 'Too many requests' }), {
+  const ip = getClientIp(req);
+  const { limited } = checkRateLimit(ip, { limit: 5, windowMs: 60 * 60 * 1000 });
+  if (limited) {
+    return new Response(JSON.stringify({ error: 'Rate limited' }), {
       status: 429,
       headers: { 'Content-Type': 'application/json', ...cors },
     });
