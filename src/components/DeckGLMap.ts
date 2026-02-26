@@ -298,6 +298,7 @@ export class DeckGLMap {
   private resizeObserver: ResizeObserver | null = null;
 
   private layerCache: Map<string, Layer> = new Map();
+  private _timeFilterCache = new Map<string, { timeRange: string; items: unknown[]; result: unknown[] }>();
   private lastZoomThreshold = 0;
   private protestSC: Supercluster | null = null;
   private techHQSC: Supercluster | null = null;
@@ -523,6 +524,24 @@ export class DeckGLMap {
       const ts = this.parseTime(getTime(item));
       return ts == null ? true : ts >= cutoff;
     });
+  }
+
+  private filterByTimeCached<T>(
+    key: string,
+    items: T[],
+    getTime: (item: T) => Date | string | number | undefined | null
+  ): T[] {
+    const cached = this._timeFilterCache.get(key);
+    if (cached && cached.items === (items as unknown[]) && cached.timeRange === this.state.timeRange) {
+      return cached.result as T[];
+    }
+    const result = this.filterByTime(items, getTime);
+    this._timeFilterCache.set(key, { timeRange: this.state.timeRange, items: items as unknown[], result });
+    return result;
+  }
+
+  private shouldCreateGhostLayer(): boolean {
+    return (this.maplibreMap?.getZoom() ?? 2) >= 3;
   }
 
   private getFilteredProtests(): SocialUnrestEvent[] {
@@ -918,17 +937,8 @@ export class DeckGLMap {
     COLORS = getOverlayColors();
     const layers: (Layer | null | false)[] = [];
     const { layers: mapLayers } = this.state;
-    const filteredEarthquakes = this.filterByTime(this.earthquakes, (eq) => eq.occurredAt);
-    const filteredNaturalEvents = this.filterByTime(this.naturalEvents, (event) => event.date);
-    const filteredWeatherAlerts = this.filterByTime(this.weatherAlerts, (alert) => alert.onset);
-    const filteredOutages = this.filterByTime(this.outages, (outage) => outage.pubDate);
-    const filteredCableAdvisories = this.filterByTime(this.cableAdvisories, (advisory) => advisory.reported);
-    const filteredFlightDelays = this.filterByTime(this.flightDelays, (delay) => delay.updatedAt);
-    const filteredMilitaryFlights = this.filterByTime(this.militaryFlights, (flight) => flight.lastSeen);
-    const filteredMilitaryVessels = this.filterByTime(this.militaryVessels, (vessel) => vessel.lastAisUpdate);
-    const filteredMilitaryFlightClusters = this.filterMilitaryFlightClustersByTime(this.militaryFlightClusters);
-    const filteredMilitaryVesselClusters = this.filterMilitaryVesselClustersByTime(this.militaryVesselClusters);
-    const filteredUcdpEvents = this.filterByTime(this.ucdpEvents, (event) => event.date_start);
+    // Time-filtered variables are computed lazily inside each layer block (Task 5: zoom bailout)
+    // using filterByTimeCached() for memoization (Task 4)
 
     // Undersea cables layer
     if (mapLayers.cables) {
@@ -952,13 +962,17 @@ export class DeckGLMap {
     // Military bases layer — hidden at low zoom (E: progressive disclosure) + ghost
     if (mapLayers.bases && this.isLayerVisible('bases')) {
       layers.push(this.createBasesLayer());
-      layers.push(this.createGhostLayer('bases-layer', MILITARY_BASES, d => [d.lon, d.lat], { radiusMinPixels: 12 }));
+      if (this.shouldCreateGhostLayer()) {
+        layers.push(this.createGhostLayer('bases-layer', MILITARY_BASES, d => [d.lon, d.lat], { radiusMinPixels: 12 }));
+      }
     }
 
     // Nuclear facilities layer — hidden at low zoom + ghost
     if (mapLayers.nuclear && this.isLayerVisible('nuclear')) {
       layers.push(this.createNuclearLayer());
-      layers.push(this.createGhostLayer('nuclear-layer', NUCLEAR_FACILITIES.filter(f => f.status !== 'decommissioned'), d => [d.lon, d.lat], { radiusMinPixels: 12 }));
+      if (this.shouldCreateGhostLayer()) {
+        layers.push(this.createGhostLayer('nuclear-layer', NUCLEAR_FACILITIES.filter(f => f.status !== 'decommissioned'), d => [d.lon, d.lat], { radiusMinPixels: 12 }));
+      }
     }
 
     // Gamma irradiators layer — hidden at low zoom
@@ -987,14 +1001,18 @@ export class DeckGLMap {
     }
 
     // Earthquakes layer + ghost for easier picking
-    if (mapLayers.natural && filteredEarthquakes.length > 0) {
-      layers.push(this.createEarthquakesLayer(filteredEarthquakes));
-      layers.push(this.createGhostLayer('earthquakes-layer', filteredEarthquakes, d => [d.location?.longitude ?? 0, d.location?.latitude ?? 0], { radiusMinPixels: 12 }));
-    }
-
-    // Natural events layer
-    if (mapLayers.natural && filteredNaturalEvents.length > 0) {
-      layers.push(this.createNaturalEventsLayer(filteredNaturalEvents));
+    if (mapLayers.natural) {
+      const filteredEarthquakes = this.filterByTimeCached('earthquakes', this.earthquakes, (eq) => eq.occurredAt);
+      if (filteredEarthquakes.length > 0) {
+        layers.push(this.createEarthquakesLayer(filteredEarthquakes));
+        if (this.shouldCreateGhostLayer()) {
+          layers.push(this.createGhostLayer('earthquakes-layer', filteredEarthquakes, d => [d.location?.longitude ?? 0, d.location?.latitude ?? 0], { radiusMinPixels: 12 }));
+        }
+      }
+      const filteredNaturalEvents = this.filterByTimeCached('naturalEvents', this.naturalEvents, (event) => event.date);
+      if (filteredNaturalEvents.length > 0) {
+        layers.push(this.createNaturalEventsLayer(filteredNaturalEvents));
+      }
     }
 
     // Satellite fires layer (NASA FIRMS)
@@ -1003,20 +1021,30 @@ export class DeckGLMap {
     }
 
     // Weather alerts layer
-    if (mapLayers.weather && filteredWeatherAlerts.length > 0) {
-      layers.push(this.createWeatherLayer(filteredWeatherAlerts));
+    if (mapLayers.weather) {
+      const filteredWeatherAlerts = this.filterByTimeCached('weatherAlerts', this.weatherAlerts, (alert) => alert.onset);
+      if (filteredWeatherAlerts.length > 0) {
+        layers.push(this.createWeatherLayer(filteredWeatherAlerts));
+      }
     }
 
     // Internet outages layer + ghost for easier picking
-    if (mapLayers.outages && filteredOutages.length > 0) {
-      layers.push(this.createOutagesLayer(filteredOutages));
-      layers.push(this.createGhostLayer('outages-layer', filteredOutages, d => [d.lon, d.lat], { radiusMinPixels: 12 }));
+    if (mapLayers.outages) {
+      const filteredOutages = this.filterByTimeCached('outages', this.outages, (outage) => outage.pubDate);
+      if (filteredOutages.length > 0) {
+        layers.push(this.createOutagesLayer(filteredOutages));
+        if (this.shouldCreateGhostLayer()) {
+          layers.push(this.createGhostLayer('outages-layer', filteredOutages, d => [d.lon, d.lat], { radiusMinPixels: 12 }));
+        }
+      }
     }
 
     // Cyber threat IOC layer
     if (mapLayers.cyberThreats && this.cyberThreats.length > 0) {
       layers.push(this.createCyberThreatsLayer());
-      layers.push(this.createGhostLayer('cyber-threats-layer', this.cyberThreats, d => [d.lon, d.lat], { radiusMinPixels: 12 }));
+      if (this.shouldCreateGhostLayer()) {
+        layers.push(this.createGhostLayer('cyber-threats-layer', this.cyberThreats, d => [d.lon, d.lat], { radiusMinPixels: 12 }));
+      }
     }
 
     // AIS density layer
@@ -1035,18 +1063,22 @@ export class DeckGLMap {
     }
 
     // Cable advisories layer (shown with cables)
-    if (mapLayers.cables && filteredCableAdvisories.length > 0) {
-      layers.push(this.createCableAdvisoriesLayer(filteredCableAdvisories));
-    }
-
-    // Repair ships layer (shown with cables)
-    if (mapLayers.cables && this.repairShips.length > 0) {
-      layers.push(this.createRepairShipsLayer());
+    if (mapLayers.cables) {
+      const filteredCableAdvisories = this.filterByTimeCached('cableAdvisories', this.cableAdvisories, (advisory) => advisory.reported);
+      if (filteredCableAdvisories.length > 0) {
+        layers.push(this.createCableAdvisoriesLayer(filteredCableAdvisories));
+      }
+      if (this.repairShips.length > 0) {
+        layers.push(this.createRepairShipsLayer());
+      }
     }
 
     // Flight delays layer
-    if (mapLayers.flights && filteredFlightDelays.length > 0) {
-      layers.push(this.createFlightDelaysLayer(filteredFlightDelays));
+    if (mapLayers.flights) {
+      const filteredFlightDelays = this.filterByTimeCached('flightDelays', this.flightDelays, (delay) => delay.updatedAt);
+      if (filteredFlightDelays.length > 0) {
+        layers.push(this.createFlightDelaysLayer(filteredFlightDelays));
+      }
     }
 
     // Protests layer (Supercluster-based deck.gl layers)
@@ -1054,24 +1086,24 @@ export class DeckGLMap {
       layers.push(...this.createProtestClusterLayers());
     }
 
-    // Military vessels layer
-    if (mapLayers.military && filteredMilitaryVessels.length > 0) {
-      layers.push(this.createMilitaryVesselsLayer(filteredMilitaryVessels));
-    }
-
-    // Military vessel clusters layer
-    if (mapLayers.military && filteredMilitaryVesselClusters.length > 0) {
-      layers.push(this.createMilitaryVesselClustersLayer(filteredMilitaryVesselClusters));
-    }
-
-    // Military flights layer
-    if (mapLayers.military && filteredMilitaryFlights.length > 0) {
-      layers.push(this.createMilitaryFlightsLayer(filteredMilitaryFlights));
-    }
-
-    // Military flight clusters layer
-    if (mapLayers.military && filteredMilitaryFlightClusters.length > 0) {
-      layers.push(this.createMilitaryFlightClustersLayer(filteredMilitaryFlightClusters));
+    // Military layers (vessels, vessel clusters, flights, flight clusters)
+    if (mapLayers.military) {
+      const filteredMilitaryVessels = this.filterByTimeCached('militaryVessels', this.militaryVessels, (vessel) => vessel.lastAisUpdate);
+      if (filteredMilitaryVessels.length > 0) {
+        layers.push(this.createMilitaryVesselsLayer(filteredMilitaryVessels));
+      }
+      const filteredMilitaryVesselClusters = this.filterMilitaryVesselClustersByTime(this.militaryVesselClusters);
+      if (filteredMilitaryVesselClusters.length > 0) {
+        layers.push(this.createMilitaryVesselClustersLayer(filteredMilitaryVesselClusters));
+      }
+      const filteredMilitaryFlights = this.filterByTimeCached('militaryFlights', this.militaryFlights, (flight) => flight.lastSeen);
+      if (filteredMilitaryFlights.length > 0) {
+        layers.push(this.createMilitaryFlightsLayer(filteredMilitaryFlights));
+      }
+      const filteredMilitaryFlightClusters = this.filterMilitaryFlightClustersByTime(this.militaryFlightClusters);
+      if (filteredMilitaryFlightClusters.length > 0) {
+        layers.push(this.createMilitaryFlightClustersLayer(filteredMilitaryFlightClusters));
+      }
     }
 
     // Strategic waterways layer
@@ -1109,8 +1141,11 @@ export class DeckGLMap {
     }
 
     // UCDP georeferenced events layer
-    if (mapLayers.ucdpEvents && filteredUcdpEvents.length > 0) {
-      layers.push(this.createUcdpEventsLayer(filteredUcdpEvents));
+    if (mapLayers.ucdpEvents) {
+      const filteredUcdpEvents = this.filterByTimeCached('ucdpEvents', this.ucdpEvents, (event) => event.date_start);
+      if (filteredUcdpEvents.length > 0) {
+        layers.push(this.createUcdpEventsLayer(filteredUcdpEvents));
+      }
     }
 
     // Displacement flows arc layer
