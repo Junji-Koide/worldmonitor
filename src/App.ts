@@ -384,7 +384,7 @@ export class App {
     this.pendingDeepLinkCountry = initState.country ?? null;
     this.setupUrlStateSync();
     this.syncDataFreshnessWithLayers();
-    await preloadCountryGeometry();
+    preloadCountryGeometry(); // fire-and-forget, ensureLoaded() guards all consumers
     await this.loadAllData();
 
     // Start CII learning mode after first data load
