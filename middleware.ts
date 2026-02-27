@@ -53,7 +53,10 @@ export default function middleware(request: Request) {
     if (inputUser !== authUser || inputPass !== authPass) return unauthorized();
   }
 
-  // --- 以下は /api/* と /favico/* にのみ適用（ボット保護）---
+  // --- ボット保護は /api/* と /favico/* にのみ適用 ---
+  const isApiOrFavico = path.startsWith('/api/') || path.startsWith('/favico/');
+  if (!isApiOrFavico) return;
+
   const ua = request.headers.get('user-agent') ?? '';
 
   // Allow social preview/image bots on OG image assets (bypasses Vercel Attack Challenge)
