@@ -1,5 +1,11 @@
 import { defineConfig, devices } from '@playwright/test';
 
+// Bypass corporate proxy for localhost test server
+const NO_PROXY_HOSTS = '127.0.0.1,localhost';
+process.env.NO_PROXY = process.env.NO_PROXY
+  ? `${NO_PROXY_HOSTS},${process.env.NO_PROXY}`
+  : NO_PROXY_HOSTS;
+
 export default defineConfig({
   testDir: './e2e',
   workers: 1,
