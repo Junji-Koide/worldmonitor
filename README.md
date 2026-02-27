@@ -46,7 +46,7 @@ AIによるニュース要約、リアルタイムマップ、35+ データレ�
 
 ### セキュリティ
 - CORS: Allowlist ベース (worldmonitor.app, koide.io, localhost, tauri)
-- CSP: `Content-Security-Policy-Report-Only` モード (vercel.json)
+- CSP: `Content-Security-Policy`（enforce モード, vercel.json）
 - レート制限: `api/_rate-limit.js` 共通モジュール
 - ボット対策: middleware.ts による UA ベースブロック
 
@@ -157,7 +157,7 @@ P3 (P2完了 or 1500ms後): その他フィード
 | ML 遅延読み込み | `@xenova/transformers` + ONNX は動的 import で 700KB+ の初期ロードを回避 |
 | GeoJSON 非同期 | `preloadCountryGeometry()` を fire-and-forget 化 |
 | API 優先度化 | P1/P2/P3 の 3 段階で重要データを先行取得 |
-| セキュリティヘッダー | CSP (report-only), X-Frame-Options, Referrer-Policy |
+| セキュリティヘッダー | CSP (enforce), X-Frame-Options, Referrer-Policy |
 | 共通レート制限 | `api/_rate-limit.js` でエンドポイント横断管理 |
 | `filterByTimeCached()` | 配列参照 + timeRange でキャッシュ。pan/zoom の O(n) スキャンを O(1) に削減 |
 | Zoom bailout | `mapLayers.X` ブロック内でフィルタを遅延評価。無効レイヤーの処理を完全スキップ |
@@ -188,7 +188,7 @@ vercel logs japan.koide.io
 主な差異:
 - Japan バリアント (`VITE_VARIANT=japan`) をデフォルトターゲットに
 - `japan.koide.io` 向けの Vercel 設定
-- セキュリティ強化 (CSP, レート制限)
+- セキュリティ強化 (CSP enforce, レート制限)
 - パフォーマンス最適化の実装
 
 ---
