@@ -1,7 +1,7 @@
 /**
- * Vercel Edge Middleware — blocks bot/crawler traffic from API routes.
- * Runs on /api/* paths only (configured via matcher below).
- * Social preview bots are allowed on /api/story and /api/og-story.
+ * Vercel Edge Middleware
+ * 1. Basic 認証（HTML ページ全体）— BASIC_AUTH_USER / BASIC_AUTH_PASS が設定されている場合のみ
+ * 2. ボット・クローラーブロック（/api/* のみ）
  */
 
 const BOT_UA =
@@ -16,22 +16,53 @@ const SOCIAL_PREVIEW_PATHS = new Set(['/api/story', '/api/og-story']);
 const SOCIAL_IMAGE_UA =
   /Slack-ImgProxy|Slackbot|twitterbot|facebookexternalhit|linkedinbot|telegrambot|whatsapp|discordbot|redditbot/i;
 
+// Basic 認証をスキップするパス
+const AUTH_BYPASS_PREFIXES = ['/api/', '/_next/', '/favico/', '/ingest/'];
+const AUTH_BYPASS_EXACT = new Set(['/sw.js', '/offline.html', '/manifest.webmanifest']);
+
+function requiresAuth(pathname: string): boolean {
+  if (AUTH_BYPASS_EXACT.has(pathname)) return false;
+  return !AUTH_BYPASS_PREFIXES.some(p => pathname.startsWith(p));
+}
+
+function unauthorized(): Response {
+  return new Response('Unauthorized', {
+    status: 401,
+    headers: { 'WWW-Authenticate': 'Basic realm="Japan Monitor"' },
+  });
+}
+
 export default function middleware(request: Request) {
-  const ua = request.headers.get('user-agent') ?? '';
   const url = new URL(request.url);
   const path = url.pathname;
 
+  // --- Basic 認証（環境変数が設定されている場合のみ有効）---
+  const authUser = process.env.BASIC_AUTH_USER;
+  const authPass = process.env.BASIC_AUTH_PASS;
+
+  if (authUser && authPass && requiresAuth(path)) {
+    const authHeader = request.headers.get('Authorization') ?? '';
+    if (!authHeader.startsWith('Basic ')) return unauthorized();
+
+    const decoded = atob(authHeader.slice(6));
+    const colon = decoded.indexOf(':');
+    if (colon === -1) return unauthorized();
+
+    const inputUser = decoded.slice(0, colon);
+    const inputPass = decoded.slice(colon + 1);
+    if (inputUser !== authUser || inputPass !== authPass) return unauthorized();
+  }
+
+  // --- 以下は /api/* と /favico/* にのみ適用（ボット保護）---
+  const ua = request.headers.get('user-agent') ?? '';
+
   // Allow social preview/image bots on OG image assets (bypasses Vercel Attack Challenge)
   if (path.startsWith('/favico/') || path.endsWith('.png')) {
-    if (SOCIAL_IMAGE_UA.test(ua)) {
-      return;
-    }
+    if (SOCIAL_IMAGE_UA.test(ua)) return;
   }
 
   // Allow social preview bots on exact OG routes only
-  if (SOCIAL_PREVIEW_UA.test(ua) && SOCIAL_PREVIEW_PATHS.has(path)) {
-    return;
-  }
+  if (SOCIAL_PREVIEW_UA.test(ua) && SOCIAL_PREVIEW_PATHS.has(path)) return;
 
   // Block bots from all API routes
   if (BOT_UA.test(ua)) {
@@ -51,5 +82,5 @@ export default function middleware(request: Request) {
 }
 
 export const config = {
-  matcher: ['/api/:path*', '/favico/:path*'],
+  matcher: ['/((?!_next/static|_next/image).*)'],
 };
