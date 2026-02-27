@@ -42,11 +42,16 @@ jobs:
       # Vercelプロジェクト設定を取得
       - name: Pull Vercel environment
         run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
 
       # バリアントを指定してビルド
       - name: Build project
         run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
         env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
           VITE_VARIANT: ${{ github.event.inputs.variant || 'japan' }}
 
       # Vercelにデプロイ
@@ -56,10 +61,13 @@ jobs:
           URL=$(vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }})
           echo "url=$URL" >> $GITHUB_OUTPUT
           echo "Deployed to: $URL"
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
 
       # Cloudflareキャッシュをパージ（デプロイ後）
       - name: Purge Cloudflare cache
-        if: success()
+        if: ${{ success() && secrets.CLOUDFLARE_ZONE_ID != '' }}
         run: |
           curl -s -X POST \
             "https://api.cloudflare.com/client/v4/zones/${{ secrets.CLOUDFLARE_ZONE_ID }}/purge_cache" \
