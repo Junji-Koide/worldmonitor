@@ -47,8 +47,9 @@ AIによるニュース要約、リアルタイムマップ、35+ データレ�
 ### セキュリティ
 - CORS: Allowlist ベース (worldmonitor.app, koide.io, localhost, tauri)
 - CSP: `Content-Security-Policy`（enforce モード, vercel.json）
+- Basic 認証: `middleware.ts` で全ページ保護（`BASIC_AUTH_USER`/`BASIC_AUTH_PASS` 環境変数）
 - レート制限: `api/_rate-limit.js` 共通モジュール
-- ボット対策: middleware.ts による UA ベースブロック
+- ボット対策: middleware.ts による UA ベースブロック（`/api/*` のみ対象）
 
 ---
 
